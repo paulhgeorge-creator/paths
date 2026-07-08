@@ -14,7 +14,12 @@ function dogSizeClass(kg){
   if (kg < 40) return "large";
   return "giant";
 }
-const DOG_SENIOR_ONSET = {small:10, medium:10, large:8, giant:6};
+/* Senior-onset ages: midpoints of real benchmarks (small 10-12, medium 8-10,
+   large 7-8, giant 5-6 yr). Larger dogs also lose ~1 month of lifespan per
+   2kg body mass — that's a lifespan-shortening rate, not a senior-onset-age
+   rate, so it's cited only as qualitative support for the size ordering,
+   not fit into a formula (would be spurious precision). */
+const DOG_SENIOR_ONSET = {small:11, medium:9, large:7.5, giant:5.5};
 
 function lifeStage(species, chronAge, weightKg){
   if (species === "cat") {
@@ -29,20 +34,29 @@ function lifeStage(species, chronAge, weightKg){
   return "senior";
 }
 
-/* ---------- FRAILTY MODEL CONFIG (interim, pre-calibration) ---------- */
-/* ponytail: no calibration dataset exists yet — BETA, MAX_DELTA_YEARS, the
-   breed modifier, and the activity-minutes table below are placeholder
-   constants, not fit to real longitudinal data.
-   TODO(calibration): replace against Montoya et al. 2023 and McMillan et al.
-   2024 once real size/breed-stratified FI curves are available.
-   NOTE: README.md currently cites "Teng et al. 2024" for this same claim —
-   unresolved whether that's the same work under a different lead author or a
-   genuinely different source. Flagged, not silently reconciled. */
+/* ---------- FRAILTY MODEL CONFIG ---------- */
+/* EXPECTED_FI_ANCHORS are now Banzato et al. 2019's real reported mean FI by
+   age band (young 2-6y=0.08, middle 7-10y=0.11, old 10+y=0.23; population
+   mean 0.14) — no longer placeholders. Banzato also reports an approximately
+   linear FI-vs-age relationship (b=0.016, Spearman rho=0.51), which is why
+   piecewise-linear interpolation between anchors is a literature-consistent
+   shape rather than an invented curve.
+   ponytail: BETA, MAX_DELTA_YEARS, BRACHY/CHONDRO_BREED_FI_MODIFIER,
+   CAT_DELTA_DAMPENING, and the activity-minutes table are still placeholder
+   constants — no public source gives a numeric FI-delta-to-years coefficient,
+   breed-modifier magnitude, or feline FI-age curve. Swap in real numbers if
+   an internal Pawl dataset produces them.
+   NOTE: README.md's "Teng et al. 2024" vs. a previously-cited "McMillan et
+   al. 2024" remains unresolved — neither could be verified as a real
+   canine/feline frailty-index paper via public search. Calibrating off
+   Banzato 2019 in the meantime rather than guessing. */
 const FRAILTY_MODEL_CONFIG = {
   BETA: 20,                           // years of physiological-age shift per unit of FI delta
   MAX_DELTA_YEARS: 6,                 // hard clamp on |delta| regardless of how extreme observedFI is
-  EXPECTED_FI_ANCHORS: {young:0.08, middle:0.16, senior:0.24}, // curve anchors, not step buckets
+  EXPECTED_FI_ANCHORS: {young:0.08, middle:0.11, senior:0.23}, // Banzato et al. 2019 reported means
   BRACHY_BREED_FI_MODIFIER: 0.03,     // added to expectedFI for brachycephalic breeds
+  CHONDRO_BREED_FI_MODIFIER: 0.02,    // added to expectedFI for chondrodystrophic breeds (spinal-disc risk, not the same claim as brachy)
+  CAT_DELTA_DAMPENING: 0.75,          // no feline FI-age curve exists in the literature; pull cat deltas toward "typical" instead of assuming dog anchors transfer 1:1
   MAX_AGE_FRACTION: 3,                // cap on ageFraction() extrapolation for very old pets
   SENIOR_EXTENSION_SLOPE_FACTOR: 0.5, // diminishing eFI growth rate applied past senior onset
   DELTA_INDICATOR_THRESHOLD_YEARS: 0.5, // |delta| below this reads as "about typical" in copy
@@ -84,17 +98,30 @@ const BRACHY_BREEDS = [
   "persian","himalayan","exotic shorthair",
 ];
 
+/* Chondrodystrophic breeds (FGF4-driven early disc degeneration) carry a
+   real, distinct structural risk — not the same claim as "breed-typical
+   trait misread as a deficit," but treated the same way here (raise the
+   expected-FI bar) since no separate scoring lever exists yet. Overlaps
+   with BRACHY_BREEDS (Shih Tzu, Pekingese) are resolved by taking the max
+   modifier, not summing, in breedModifier(). */
+const CHONDRODYSTROPHIC_BREEDS = [
+  "dachshund","corgi","welsh corgi","basset hound","shih tzu","pekingese",
+];
+
 function breedModifier(breedText){
   if (!breedText) return 0;
   const s = breedText.toLowerCase();
-  return BRACHY_BREEDS.some(b => s.includes(b)) ? FRAILTY_MODEL_CONFIG.BRACHY_BREED_FI_MODIFIER : 0;
+  const brachy = BRACHY_BREEDS.some(b => s.includes(b)) ? FRAILTY_MODEL_CONFIG.BRACHY_BREED_FI_MODIFIER : 0;
+  const chondro = CHONDRODYSTROPHIC_BREEDS.some(b => s.includes(b)) ? FRAILTY_MODEL_CONFIG.CHONDRO_BREED_FI_MODIFIER : 0;
+  return Math.max(brachy, chondro);
 }
 
 /* ---------- interim scoring model (isolated swap point) ---------- */
 
 function estimatePhysiologicalAge({species, chronAge, weightKg, breed, observedFI}){
   const eFI = expectedFIContinuous(species, chronAge, weightKg) + breedModifier(breed);
-  const rawDelta = FRAILTY_MODEL_CONFIG.BETA * (observedFI - eFI);
+  let rawDelta = FRAILTY_MODEL_CONFIG.BETA * (observedFI - eFI);
+  if (species === "cat") rawDelta *= FRAILTY_MODEL_CONFIG.CAT_DELTA_DAMPENING;
   const delta = Math.max(-FRAILTY_MODEL_CONFIG.MAX_DELTA_YEARS,
                  Math.min(FRAILTY_MODEL_CONFIG.MAX_DELTA_YEARS, rawDelta));
   const center = Math.max(0.1, chronAge + delta);
@@ -109,19 +136,46 @@ function classifyDelta(delta, threshold){
 }
 
 /* ---------- activity-minutes scoring (Problem 3) ---------- */
-/* ponytail: no real per-breed/species minimum-activity data exists — these
-   are illustrative placeholder thresholds (minutes/day of walking+play), not
-   derived from veterinary activity guidelines. Swap in real thresholds when
-   available. */
+/* ponytail: literature check (PDSA, Merck, AAHA, plus a direct check for
+   minutes-to-years coefficients) confirms no size/breed-stratified numeric
+   activity standard exists publicly — only a general "30min-2hr/day" range
+   by energy level, and validated proxies like timed mobility trials, not a
+   minutes threshold. Size-class defaults stay illustrative placeholders
+   within that general range. Swap in real thresholds if a real standard or
+   internal dataset is ever published. */
 const ACTIVITY_MINUTES_TABLE = {
   dog: {small:30, medium:45, large:60, giant:45},
   cat: 20,
 };
 
-function scoreActivityMinutes(species, minutes, weightKg){
+/* Breed-specific overrides, keyed by lowercase substring, checked before the
+   size-class default. Sourced from general breed-standard energy-level
+   descriptions (AKC/breed-club characterizations of "high energy" vs
+   "low energy" breeds), not a controlled study — same placeholder tier as
+   the size-class table above, just breed-extensible. Extend this object
+   (no logic changes needed) as real per-breed data becomes available. */
+const ACTIVITY_BREED_OVERRIDES = {
+  "border collie":90, "australian shepherd":90, "husky":90, "siberian husky":90,
+  "vizsla":90, "weimaraner":90, "german shepherd":75, "labrador":60,
+  "bulldog":20, "french bulldog":20, "frenchie":20, "pug":20,
+  "shih tzu":20, "pekingese":15, "basset hound":25,
+  "great dane":40, "mastiff":30, "saint bernard":30,
+};
+
+function getActivityMinutesThreshold(species, weightKg, breedText){
+  if (species === "cat") return ACTIVITY_MINUTES_TABLE.cat;
+  if (breedText){
+    const s = breedText.toLowerCase();
+    for (const breed in ACTIVITY_BREED_OVERRIDES){
+      if (s.includes(breed)) return ACTIVITY_BREED_OVERRIDES[breed];
+    }
+  }
+  return ACTIVITY_MINUTES_TABLE.dog[dogSizeClass(weightKg)];
+}
+
+function scoreActivityMinutes(species, minutes, weightKg, breedText){
   if (minutes == null || isNaN(minutes)) return undefined;
-  const threshold = species === "cat" ? ACTIVITY_MINUTES_TABLE.cat
-                                       : ACTIVITY_MINUTES_TABLE.dog[dogSizeClass(weightKg)];
+  const threshold = getActivityMinutesThreshold(species, weightKg, breedText);
   const ratio = minutes / threshold;
   if (ratio >= 0.8) return 0;
   if (ratio >= 0.4) return 0.5;
@@ -152,6 +206,16 @@ function catHumanEquivalent(catAge){
   return Math.round(4.14*catAge + 15);
 }
 
+// Wang et al. 2020: human_age = 16*ln(dog_age) + 31. Floors dog_age so ln() stays defined.
+function dogHumanEquivalent(dogAge){
+  return Math.round(16 * Math.log(Math.max(dogAge, 0.05)) + 31);
+}
+
+function seniorGuessAge(species, weightKg){
+  if (species === "cat") return 11;
+  return DOG_SENIOR_ONSET[dogSizeClass(weightKg)];
+}
+
 function bcsToDeficit(bcs){
   const d = Math.abs(bcs - 4.5);
   if (d <= 0.5) return 0;
@@ -159,13 +223,94 @@ function bcsToDeficit(bcs){
   return 1;
 }
 
-const AGE_GUESS = {puppy:0.5, young:2, adult:5, senior_guess:8}; // used only when DOB unknown
+/* ---------- weight/BCS percentile ranking ---------- */
+/* Anchored on real cited prevalence stats: 59% of dogs / 61% of cats are
+   overweight-or-obese (roughly the BCS>=6 population), 22% of dogs / 33% of
+   cats are obese (BCS 8-9). BCS 6 and 8 anchors are those real numbers; BCS
+   7 and 9 are linearly interpolated/extrapolated between them — flagged,
+   not independently sourced. BCS<=5 (ideal or underweight) returns null —
+   no percentile framing where a pet isn't in the overweight tail. */
+const OVERWEIGHT_PERCENTILE_ANCHORS = {
+  dog: {6:59, 8:22, 9:8},
+  cat: {6:61, 8:33, 9:10},
+};
+
+function overweightPercentile(species, bcs){
+  if (bcs == null || isNaN(bcs) || bcs < 6) return null;
+  const anchors = OVERWEIGHT_PERCENTILE_ANCHORS[species] || OVERWEIGHT_PERCENTILE_ANCHORS.dog;
+  const keys = Object.keys(anchors).map(Number).sort((a,b)=>a-b);
+  if (bcs <= keys[0]) return anchors[keys[0]];
+  if (bcs >= keys[keys.length-1]) return anchors[keys[keys.length-1]];
+  for (let i=0;i<keys.length-1;i++){
+    if (bcs >= keys[i] && bcs <= keys[i+1]){
+      const t = (bcs-keys[i]) / (keys[i+1]-keys[i]);
+      return Math.round(anchors[keys[i]] + (anchors[keys[i+1]]-anchors[keys[i]])*t);
+    }
+  }
+}
+
+/* ---------- confidence-weighted age fusion ---------- */
+/* Combines whatever age signals are available (exact DOB, an owner years-only
+   guess, a size-based prior, a photo-model estimate) into one age value via a
+   confidence-weighted average — never a category label, never a single model
+   deciding alone. Pure function: callers supply {years, confidence} signals;
+   a signal with confidence 0 (e.g. an unreachable/untrained photo model)
+   contributes nothing, which is how "don't rely on image estimation alone"
+   is enforced structurally rather than by convention. */
+function fuseAge(signals){
+  const valid = (signals || []).filter(s => s && Number.isFinite(s.years) && s.confidence > 0);
+  if (!valid.length) return {years: null, confidence: 0};
+  const totalConf = valid.reduce((sum, s) => sum + s.confidence, 0);
+  const years = valid.reduce((sum, s) => sum + s.years * s.confidence, 0) / totalConf;
+  return {years, confidence: Math.min(1, totalConf)};
+}
+
+/* ---------- aging-pace delta as a percentage ---------- */
+/* delta expressed as % of chronological age, e.g. delta=1.2yr at chronAge=8
+   -> "15% faster/slower than typical for their age" — a real ratio of the
+   model's own numbers, not an invented percentage. */
+function deltaPercentOfAge(delta, chronAge){
+  if (!chronAge) return 0;
+  return Math.round((delta / chronAge) * 100);
+}
+
+/* ---------- body condition chart (real 9-point WSAVA/Purina-style scale) ---------- */
+/* imageHook is a stable key for the UI to look up a placeholder slot by —
+   drop real photos in later keyed by these strings, no logic changes needed. */
+const BCS_CHART = {
+  dog: [
+    {bcs:1, label:"Emaciated", desc:"Ribs, spine, and pelvic bones visible at a distance. No palpable fat.", imageHook:"bcs-dog-1"},
+    {bcs:2, label:"Very thin", desc:"Ribs, spine easily visible. Obvious waist and abdominal tuck.", imageHook:"bcs-dog-2"},
+    {bcs:3, label:"Thin", desc:"Ribs easily felt, minimal fat cover. Waist and tuck present.", imageHook:"bcs-dog-3"},
+    {bcs:4, label:"Ideal (lean)", desc:"Ribs easily felt with slight fat cover. Waist visible from above.", imageHook:"bcs-dog-4"},
+    {bcs:5, label:"Ideal", desc:"Ribs easily felt. Visible waist behind ribs and abdominal tuck.", imageHook:"bcs-dog-5"},
+    {bcs:6, label:"Slightly heavy", desc:"Ribs felt with slight excess fat cover. Waist discernible but not prominent.", imageHook:"bcs-dog-6"},
+    {bcs:7, label:"Heavy", desc:"Ribs felt with difficulty under heavy fat. Waist barely visible or absent.", imageHook:"bcs-dog-7"},
+    {bcs:8, label:"Obese", desc:"Ribs not felt under heavy fat cover. No waist. Abdominal distension.", imageHook:"bcs-dog-8"},
+    {bcs:9, label:"Severely obese", desc:"Massive fat deposits. No waist or tuck. Marked abdominal distension.", imageHook:"bcs-dog-9"},
+  ],
+  cat: [
+    {bcs:1, label:"Emaciated", desc:"Ribs, spine, pelvic bones visible. No palpable fat. Severe abdominal tuck.", imageHook:"bcs-cat-1"},
+    {bcs:2, label:"Very thin", desc:"Ribs easily visible, minimal muscle mass. Pronounced abdominal tuck.", imageHook:"bcs-cat-2"},
+    {bcs:3, label:"Thin", desc:"Ribs easily palpated, minimal fat cover. Abdominal tuck present.", imageHook:"bcs-cat-3"},
+    {bcs:4, label:"Ideal (lean)", desc:"Ribs palpable with slight fat cover. Waist visible behind ribs.", imageHook:"bcs-cat-4"},
+    {bcs:5, label:"Ideal", desc:"Well-proportioned. Ribs palpable, visible waist, minimal abdominal fat pad.", imageHook:"bcs-cat-5"},
+    {bcs:6, label:"Slightly heavy", desc:"Ribs palpable with slight excess fat. Waist discernible, abdominal fat pad present.", imageHook:"bcs-cat-6"},
+    {bcs:7, label:"Heavy", desc:"Ribs felt with difficulty. Noticeable rounding of abdomen, moderate fat pad.", imageHook:"bcs-cat-7"},
+    {bcs:8, label:"Obese", desc:"Ribs not felt under heavy fat. Distended abdomen, prominent fat pad.", imageHook:"bcs-cat-8"},
+    {bcs:9, label:"Severely obese", desc:"Massive fat deposits over chest, abdomen, and base of tail.", imageHook:"bcs-cat-9"},
+  ],
+};
+
+const AGE_GUESS = {puppy:0.5, young:2, adult:5, senior_guess:8}; // legacy fallback map; seniorGuessAge() is preferred for the size-aware case
 
 return {
   dogSizeClass, DOG_SENIOR_ONSET, lifeStage,
-  ageFraction, expectedFIContinuous, breedModifier,
-  estimatePhysiologicalAge, classifyDelta, scoreActivityMinutes,
-  bandYears, fiZone, catHumanEquivalent, bcsToDeficit, AGE_GUESS,
+  ageFraction, expectedFIContinuous, breedModifier, CHONDRODYSTROPHIC_BREEDS,
+  estimatePhysiologicalAge, classifyDelta, scoreActivityMinutes, seniorGuessAge,
+  getActivityMinutesThreshold, ACTIVITY_BREED_OVERRIDES,
+  overweightPercentile, fuseAge, deltaPercentOfAge, BCS_CHART,
+  bandYears, fiZone, catHumanEquivalent, dogHumanEquivalent, bcsToDeficit, AGE_GUESS,
   FRAILTY_MODEL_CONFIG, ACTIVITY_MINUTES_TABLE,
 };
 

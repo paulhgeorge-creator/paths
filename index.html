@@ -30,7 +30,7 @@
   .opt{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;user-select:none;transition:all .12s;}
   .opt:hover{border-color:var(--brand);}
   .opt.sel{background:var(--brand);border-color:var(--brand);color:#fff;}
-  input[type=text],input[type=number],input[type=date],select{
+  input[type=text],input[type=number],input[type=date],input[type=file],select{
     width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;color:var(--ink);
   }
   input[type=range]{width:100%;}
@@ -41,20 +41,42 @@
   button.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand);border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:10px;}
   .species-toggle{display:flex;gap:10px;margin-bottom:18px;}
   .species-toggle .opt{flex:1;text-align:center;font-weight:600;}
-  .unknown-toggle{margin-top:8px;font-size:13px;color:var(--muted);}
+  .unknown-toggle{margin-top:2px;margin-bottom:10px;font-size:13px;color:var(--muted);}
   .unknown-toggle label{cursor:pointer;}
+
+  /* weight unit toggle */
+  .weight-row{display:flex;gap:8px;align-items:stretch;}
+  .weight-row input{flex:1;}
+  .unit-toggle{display:flex;gap:4px;flex-shrink:0;}
+  .unit-toggle .opt{padding:10px 12px;font-size:13px;}
+
+  /* split date of birth */
+  .dob-row{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;}
+
+  /* photo upload */
+  .photo-status{color:var(--muted);font-size:13px;margin-top:6px;}
+
+  /* body-condition chart step */
+  .bcs-chart-preview{text-align:center;}
+  .bcs-chart-thumb{max-width:100%;max-height:160px;border-radius:12px;border:1px solid var(--line);object-fit:contain;background:#fff;cursor:pointer;}
+  .chart-btn{display:inline-block;margin-top:8px;font-size:13px;color:var(--brand);text-decoration:none;font-weight:600;border:1px solid var(--brand);border-radius:999px;padding:6px 14px;}
+  .chart-btn:hover{background:var(--brand-light);}
+  .bcs-readout{margin-top:14px;text-align:center;}
+  .bcs-readout strong{font-size:15px;}
+  .bcs-readout p{color:var(--muted);font-size:13px;margin:4px 0 0;}
 
   /* result card */
   .result{background:linear-gradient(155deg,var(--brand) 0%,#1f4c3a 100%);color:#fff;border-radius:20px;padding:28px 24px;text-align:center;margin-bottom:18px;}
-  .result .stage{font-size:13px;text-transform:uppercase;letter-spacing:.08em;opacity:.85;margin-bottom:6px;}
   .result .age{font-size:44px;font-weight:800;margin:4px 0;}
-  .result .band{font-size:14px;opacity:.9;}
-  .result .zone-pill{display:inline-block;margin-top:14px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.15);font-size:13px;font-weight:600;}
+  .result .range-sub{font-size:13px;opacity:.8;margin-bottom:6px;}
+  .result .zone-pill,.result .percentile-pill{display:inline-block;margin-top:10px;margin-right:6px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.15);font-size:13px;font-weight:600;}
+  .result .percentile-pill{background:rgba(232,163,61,.35);}
   .vet-banner{background:#fbe9e2;border:1px solid var(--warn);color:#8a3a1c;border-radius:12px;padding:14px 16px;font-size:14px;margin-bottom:16px;}
   .human-eq{font-size:13px;opacity:.85;margin-top:10px;}
   .explanation{font-size:14px;opacity:.92;margin-top:14px;}
   .delta-indicator{font-size:13px;opacity:.85;margin-top:6px;}
   .feline-note{font-size:12px;opacity:.8;margin-top:6px;font-style:italic;}
+  .confidence-note{font-size:11px;opacity:.65;margin-top:10px;}
   .cta-row{display:flex;gap:10px;}
   footer.note{color:var(--muted);font-size:12px;text-align:center;margin-top:30px;}
 </style>
@@ -63,14 +85,23 @@
 <div class="wrap" id="app"></div>
 
 <script src="frailty-model.js"></script>
+<script src="age-estimator.js"></script>
 <script>
 /* ---------- Data model ---------- */
 /* Deficit score: 0 absent, 0.5 mild, 1 severe/present.
    Age/FI model lives in frailty-model.js — see that file for the interim
    scoring model and its calibration TODO. */
-const { dogSizeClass, lifeStage, fiZone, catHumanEquivalent, bcsToDeficit,
+const { lifeStage, fiZone, catHumanEquivalent, dogHumanEquivalent, bcsToDeficit,
         estimatePhysiologicalAge, scoreActivityMinutes, classifyDelta,
-        bandYears, AGE_GUESS } = window.FrailtyModel;
+        bandYears, AGE_GUESS, overweightPercentile, fuseAge, deltaPercentOfAge,
+        BCS_CHART } = window.FrailtyModel;
+
+const KG_PER_LB = 0.45359237;
+
+/* Real veterinary reference charts (WSAVA/Daily Paws for dogs; Bjornvad/
+   Laflamme via APOP for cats) — dropped in per the BCS-chart hook points
+   already built into the BCS step. */
+const BCS_REFERENCE_CHARTS = { dog: "assets/bcs-chart-dog.png", cat: "assets/bcs-chart-cat.webp" };
 
 const SCALE3 = [
   {v:0,   label:"Not at all"},
@@ -128,24 +159,55 @@ const PART4 = [
 /* Reproductive status detail is captured as a life-table modifier per the spec
    ("age modifier", not a deficit) — informational only, not part of the FI denominator. */
 
-/* ---------- Age / FI model — see frailty-model.js ---------- */
-
-const STAGE_LABEL = {young:"Young adult", middle:"Middle-aged", senior:"Senior"};
-
 /* ---------- App state ---------- */
 const state = {
-  step:"baseline", // baseline -> part1 -> result1 -> part2 -> result2 -> part3 -> result3 -> part4 -> result4
-  baseline:{species:"dog", name:"", breed:"", weight:20, sexNeuter:"male-neutered", dobKnown:true, dob:"", ageGuess:"adult", bcs:5},
+  step:"baseline", // baseline -> bcs -> part1 -> result1 -> part2 -> result2 -> part3 -> result3 -> part4 -> result4
+  baseline:{
+    species:"dog", name:"", breed:"",
+    weightValue:20, weightUnit:"kg",
+    sexNeuter:"male-neutered",
+    dobKnown:true, dobMonth:"", dobDay:"", dobYear:"",
+    yearsOnlyAge:"",
+    bcs:5,
+    photoFile:null, photoEstimate:null,
+  },
   answers:{}, // id -> score
 };
 
-function chronAge(){
+function weightKg(){
+  const v = parseFloat(state.baseline.weightValue) || 0;
+  return state.baseline.weightUnit === "lb" ? v * KG_PER_LB : v;
+}
+
+function dobAgeYears(){
   const b = state.baseline;
-  if (b.dobKnown && b.dob){
-    const ms = Date.parse(b.dob);
-    if (!isNaN(ms)) return Math.max(0.1, (Date.now() - ms) / (365.25*24*3600*1000));
+  if (!b.dobKnown) return null;
+  const y = parseInt(b.dobYear), m = parseInt(b.dobMonth), d = parseInt(b.dobDay);
+  if (!y || !m || !d) return null;
+  const dob = new Date(y, m-1, d);
+  if (isNaN(dob.getTime())) return null;
+  const ms = Date.now() - dob.getTime();
+  if (ms <= 0) return null;
+  return Math.max(0.02, ms / (365.25*24*3600*1000));
+}
+
+/* Confidence-weighted fusion — the single seam where DOB, an owner years-only
+   guess, a photo estimate, and a last-resort population prior all combine
+   into one age value. A photo signal with confidence 0 (today's untrained
+   backend) contributes nothing — this is how "don't rely on image
+   estimation alone" is enforced structurally, not just in copy. */
+function computeFinalAge(){
+  const b = state.baseline;
+  const signals = [];
+  const dobAge = dobAgeYears();
+  if (dobAge != null) signals.push({years: dobAge, confidence: 1});
+  const yearsOnly = parseFloat(b.yearsOnlyAge);
+  if (!b.dobKnown && Number.isFinite(yearsOnly) && yearsOnly > 0) signals.push({years: yearsOnly, confidence: 0.5});
+  if (b.photoEstimate && b.photoEstimate.confidence > 0) {
+    signals.push({years: b.photoEstimate.years, confidence: b.photoEstimate.confidence});
   }
-  return AGE_GUESS[b.ageGuess] ?? 5;
+  signals.push({years: AGE_GUESS.adult, confidence: 0.1}); // last-resort prior so fusion is never empty
+  return fuseAge(signals);
 }
 
 function answeredScores(ids){
@@ -166,23 +228,24 @@ function computeResult(partNumber){
   const observedFI = n ? scores.reduce((a,b)=>a+b,0)/n : 0;
 
   const species = state.baseline.species;
-  const weight = state.baseline.weight;
+  const weight = weightKg();
   const breed = state.baseline.breed;
-  const age = chronAge();
+  const { years: age, confidence: ageConfidence } = computeFinalAge();
   const {center, delta} = estimatePhysiologicalAge({species, chronAge: age, weightKg: weight, breed, observedFI});
 
   let band = bandYears(n);
   if (species === "cat") band *= 1.3; // Sofia/Priya: feline aging science lags dogs — widen the band
 
-  const stage = lifeStage(species, age, weight); // chronAge-based: a life-stage fact about the pet, not a symptom of this round's answers
+  const stage = lifeStage(species, age, weight); // internal bucket, feeds the expected-FI curve — not shown as a UI label
   const zone = fiZone(observedFI);
   const deltaCategory = classifyDelta(delta);
+  const overweightPct = overweightPercentile(species, state.baseline.bcs);
 
   return {
-    n, observedFI, center, delta, deltaCategory, chronAge: age, breed,
+    n, observedFI, center, delta, deltaCategory, chronAge: age, ageConfidence, breed,
     low: Math.max(0.1, center-band), high: center+band,
-    stage, zone, species,
-    humanEq: species==="cat" ? catHumanEquivalent(center) : null,
+    stage, zone, species, overweightPct,
+    humanEq: species==="cat" ? catHumanEquivalent(center) : dogHumanEquivalent(center),
   };
 }
 
@@ -215,7 +278,7 @@ function questionBlock(q, opts){
 }
 
 function progressHTML(activeIdx){
-  const total = 5; // baseline+part1 counted as one visual stage, then 2,3,4, then done
+  const total = 5; // baseline+bcs+part1 counted as one visual stage, then 2,3,4, then done
   let segs = "";
   for (let i=0;i<4;i++){
     const cls = i < activeIdx ? "done" : (i===activeIdx ? "current" : "");
@@ -227,6 +290,7 @@ function progressHTML(activeIdx){
 function render(){
   const s = state.step;
   if (s === "baseline") return renderBaseline();
+  if (s === "bcs") return renderBCS();
   if (s === "part1") return renderPart("part1");
   if (s === "part2") return renderPart("part2");
   if (s === "part3") return renderPart("part3");
@@ -234,8 +298,21 @@ function render(){
   if (s.startsWith("result")) return renderResult(parseInt(s.replace("result","")));
 }
 
+function photoStatusLine(b){
+  if (!b.photoFile) return "No photo selected yet.";
+  const est = b.photoEstimate;
+  if (!est || est.status === "checking") return `Selected: ${b.photoFile.name} — analyzing…`;
+  if (est.confidence > 0) return `Selected: ${b.photoFile.name} — estimated ~${Math.round(est.years)} yrs (used as one signal, not the final answer).`;
+  return `Selected: ${b.photoFile.name} — no confident read yet (photo model isn't trained), other signals used instead.`;
+}
+
 function renderBaseline(){
   const b = state.baseline;
+  const currentYear = new Date().getFullYear();
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const monthOptions = `<option value="">Month</option>` + monthNames
+    .map((m,i)=>`<option value="${i+1}" ${String(b.dobMonth)===String(i+1)?'selected':''}>${m}</option>`).join("");
+
   app.innerHTML = `
     <header class="top"><div class="logo">🐾 Pawl</div></header>
     ${progressHTML(0)}
@@ -251,8 +328,15 @@ function renderBaseline(){
       <div class="q"><label class="qtext">Breed (or best guess)</label>
         <input type="text" id="f-breed" value="${b.breed}" placeholder="Labrador mix"></div>
       <div class="row2">
-        <div class="q"><label class="qtext">Adult weight (kg)</label>
-          <input type="number" id="f-weight" value="${b.weight}" min="0.5" step="0.5"></div>
+        <div class="q"><label class="qtext">Adult weight</label>
+          <div class="weight-row">
+            <input type="number" id="f-weight" value="${b.weightValue}" min="0.2" step="0.1">
+            <div class="unit-toggle">
+              <div class="opt ${b.weightUnit==='kg'?'sel':''}" data-unit="kg">kg</div>
+              <div class="opt ${b.weightUnit==='lb'?'sel':''}" data-unit="lb">lb</div>
+            </div>
+          </div>
+        </div>
         <div class="q"><label class="qtext">Sex & neuter status</label>
           <select id="f-sex">
             <option value="male-intact" ${b.sexNeuter==='male-intact'?'selected':''}>Male, intact</option>
@@ -263,25 +347,26 @@ function renderBaseline(){
       </div>
       <div class="q">
         <label class="qtext">Date of birth</label>
-        <input type="date" id="f-dob" value="${b.dob}" ${b.dobKnown?'':'disabled'}>
         <div class="unknown-toggle">
-          <label><input type="checkbox" id="f-dob-unknown" ${b.dobKnown?'':'checked'}> I don't know — estimate from life stage</label>
+          <label><input type="checkbox" id="f-dob-unknown" ${b.dobKnown?'':'checked'}> I don't know the exact date</label>
         </div>
-        ${!b.dobKnown ? `
-        <div class="q" style="margin-top:10px;">
-          <select id="f-ageguess">
-            <option value="puppy" ${b.ageGuess==='puppy'?'selected':''}>Puppy / kitten</option>
-            <option value="young" ${b.ageGuess==='young'?'selected':''}>Young adult</option>
-            <option value="adult" ${b.ageGuess==='adult'?'selected':''}>Adult</option>
-            <option value="senior_guess" ${b.ageGuess==='senior_guess'?'selected':''}>Looks senior</option>
-          </select>
-        </div>` : ""}
+        ${b.dobKnown ? `
+        <div class="dob-row">
+          <select id="f-dob-month">${monthOptions}</select>
+          <input type="number" id="f-dob-day" placeholder="Day" min="1" max="31" value="${b.dobDay}">
+          <input type="number" id="f-dob-year" placeholder="Year" min="${currentYear-30}" max="${currentYear}" value="${b.dobYear}">
+        </div>` : `
+        <div class="q" style="margin-top:10px;margin-bottom:0;">
+          <label class="qtext">Best guess — age in years</label>
+          <input type="number" id="f-years-only" min="0" step="0.5" value="${b.yearsOnlyAge}" placeholder="e.g. 6">
+          <div class="hint">Rough is fine — a photo below, plus your answers, help sharpen it.</div>
+        </div>`}
       </div>
-      <div class="q">
-        <label class="qtext">Body condition (photo-guided, 1–9)</label>
-        <div class="hint">Ribs easily felt with slight fat cover, visible waist = ideal (4–5).</div>
-        <input type="range" id="f-bcs" min="1" max="9" step="1" value="${b.bcs}">
-        <div class="bcs-scale"><span>1 · too thin</span><span>5 · ideal</span><span>9 · obese</span></div>
+      <div class="q" style="margin-bottom:0;">
+        <label class="qtext">Photo (optional)</label>
+        <div class="hint">Helps refine the age estimate — combined with the info above, never used alone.</div>
+        <input type="file" id="f-photo" accept="image/*">
+        <div class="photo-status">${photoStatusLine(b)}</div>
       </div>
     </div>
     <button class="primary" id="next-baseline">Start the vitality check →</button>
@@ -292,19 +377,75 @@ function renderBaseline(){
   });
   document.getElementById("f-name").oninput = e=> state.baseline.name = e.target.value;
   document.getElementById("f-breed").oninput = e=> state.baseline.breed = e.target.value;
-  document.getElementById("f-weight").oninput = e=> state.baseline.weight = parseFloat(e.target.value)||0;
+  document.getElementById("f-weight").oninput = e=> state.baseline.weightValue = parseFloat(e.target.value)||0;
+  document.querySelectorAll("[data-unit]").forEach(el=>el.onclick=()=>{
+    state.baseline.weightUnit = el.dataset.unit; render();
+  });
   document.getElementById("f-sex").onchange = e=> state.baseline.sexNeuter = e.target.value;
-  document.getElementById("f-dob").oninput = e=> state.baseline.dob = e.target.value;
   document.getElementById("f-dob-unknown").onchange = e=>{ state.baseline.dobKnown = !e.target.checked; render(); };
-  const ageGuessEl = document.getElementById("f-ageguess");
-  if (ageGuessEl) ageGuessEl.onchange = e=> state.baseline.ageGuess = e.target.value;
+
+  const monthEl = document.getElementById("f-dob-month");
+  if (monthEl) monthEl.onchange = e=> state.baseline.dobMonth = e.target.value;
+  const dayEl = document.getElementById("f-dob-day");
+  if (dayEl) dayEl.oninput = e=> state.baseline.dobDay = e.target.value;
+  const yearEl = document.getElementById("f-dob-year");
+  if (yearEl) yearEl.oninput = e=> state.baseline.dobYear = e.target.value;
+  const yearsOnlyEl = document.getElementById("f-years-only");
+  if (yearsOnlyEl) yearsOnlyEl.oninput = e=> state.baseline.yearsOnlyAge = e.target.value;
+
+  document.getElementById("f-photo").onchange = async e=>{
+    const file = e.target.files[0];
+    if (!file) return;
+    state.baseline.photoFile = file;
+    state.baseline.photoEstimate = {status:"checking", years:null, confidence:0};
+    render();
+    const result = await PawlAgeEstimator.estimateAgeFromPhoto(file, {species: state.baseline.species});
+    state.baseline.photoEstimate = result;
+    render();
+  };
+
+  document.getElementById("next-baseline").onclick = ()=>{
+    // A photo was provided — skip the manual body-condition step. BCS then
+    // stays at its default (5, ideal) and p1_bcs is never scored, same
+    // "skipped items don't count" rule already used elsewhere in the flow.
+    state.step = b.photoFile ? "part1" : "bcs";
+    render();
+  };
+}
+
+function renderBCS(){
+  const b = state.baseline;
+  const chart = BCS_CHART[b.species];
+  const cur = chart.find(c=>c.bcs===b.bcs) || chart[4];
+  app.innerHTML = `
+    <header class="top"><div class="logo">🐾 Pawl</div></header>
+    ${progressHTML(0)}
+    <h1>How's ${b.name || "your pet"}'s body condition?</h1>
+    <p class="lead">Compare against the chart below — ribs, waist, and profile are the tells, not the scale.</p>
+    <div class="card">
+      <div class="bcs-chart-preview" data-img-hook="${cur.imageHook}">
+        <img class="bcs-chart-thumb" id="bcs-chart-thumb" src="${BCS_REFERENCE_CHARTS[b.species]}" alt="${b.species} body condition reference chart">
+        <div><a class="chart-btn" href="${BCS_REFERENCE_CHARTS[b.species]}" target="_blank" rel="noopener">View full-size chart ↗</a></div>
+      </div>
+      <div class="q" style="margin-top:16px;margin-bottom:0;">
+        <input type="range" id="f-bcs" min="1" max="9" step="1" value="${b.bcs}">
+        <div class="bcs-scale"><span>1 · too thin</span><span>5 · ideal</span><span>9 · obese</span></div>
+      </div>
+      <div class="bcs-readout">
+        <strong>${b.bcs} — ${cur.label}</strong>
+        <p>${cur.desc}</p>
+      </div>
+    </div>
+    <button class="primary" id="next-bcs">Continue →</button>
+  `;
   document.getElementById("f-bcs").oninput = e=>{
     state.baseline.bcs = parseInt(e.target.value);
     state.answers.p1_bcs = bcsToDeficit(state.baseline.bcs);
+    render();
   };
+  document.getElementById("bcs-chart-thumb").onclick = ()=> window.open(BCS_REFERENCE_CHARTS[b.species], "_blank");
   state.answers.p1_bcs = bcsToDeficit(state.baseline.bcs);
-
-  document.getElementById("next-baseline").onclick = ()=>{ state.step="part1"; render(); };
+  document.getElementById("next-bcs").onclick = ()=>{ state.step="part1"; render(); };
 }
 
 const PART_META = {
@@ -339,7 +480,7 @@ function renderPart(key){
       const raw = parseFloat(inp.value);
       state.raw = state.raw || {};
       state.raw[inp.dataset.qid] = isNaN(raw) ? undefined : raw;
-      state.answers[inp.dataset.qid] = scoreActivityMinutes(state.baseline.species, raw, state.baseline.weight);
+      state.answers[inp.dataset.qid] = scoreActivityMinutes(state.baseline.species, raw, weightKg(), state.baseline.breed);
       // deliberately no render() here — re-rendering innerHTML on every
       // keystroke would blow away focus/cursor mid-typing (same reason
       // f-name/f-breed/f-weight above don't re-render either).
@@ -348,11 +489,16 @@ function renderPart(key){
   document.getElementById("next-part").onclick = ()=>{ state.step = "result"+meta.num; render(); };
 }
 
-const DELTA_COPY = {
-  slower:  "Aging a bit slower than typical for their age — nice work.",
-  typical: "Aging right in line with expectations for their age.",
-  faster:  "Aging a bit faster than typical for their age — worth keeping an eye on.",
-};
+/* Aging-pace copy is percentage-based (delta as % of chronological age) per
+   product direction, replacing the earlier multiplier/qualitative-only
+   framing. Still never shows a raw FI percentage — only this derived ratio. */
+function deltaCopy(delta, chronAge, category){
+  if (category === "typical") return "Aging right in line with expectations for their age.";
+  const pct = Math.abs(deltaPercentOfAge(delta, chronAge));
+  const dir = category === "slower" ? "slower" : "faster";
+  const tone = category === "slower" ? "nice work." : "nothing urgent, just a good nudge to keep supporting them.";
+  return `Aging about ${pct}% ${dir} than typical for their age — ${tone}`;
+}
 
 function renderResult(partNumber){
   const r = computeResult(partNumber);
@@ -361,19 +507,24 @@ function renderResult(partNumber){
   const explanationLine = `${name} is aging like a typical ${r.low.toFixed(0)}–${r.high.toFixed(0)}-year-old ${breedLabel} — ${r.zone.label} zone.`;
   const nextPart = partNumber+1;
   const isLast = partNumber===4;
+  // Headline is an approximate single figure (rounded, "~" prefixed) with the
+  // range kept as a secondary line — a deliberate softening of the earlier
+  // "never a bare point-value age" guardrail, not a silent drop of it.
+  const headlineAge = Math.round(r.center);
   app.innerHTML = `
     <header class="top"><div class="logo">🐾 Pawl</div></header>
     ${progressHTML(Math.min(partNumber,3))}
     ${r.zone.vet ? `<div class="vet-banner">💬 ${name}'s answers suggest it's worth a check-in with your vet soon. This isn't a diagnosis — just a nudge to get eyes on it.</div>` : ""}
     <div class="result">
-      <div class="stage">${STAGE_LABEL[r.stage]}</div>
-      <div class="age">${r.low.toFixed(1)}–${r.high.toFixed(1)} yrs</div>
-      <div class="band">${name} ages like a ${STAGE_LABEL[r.stage].toLowerCase()} ${r.species}</div>
+      <div class="age">~${headlineAge} yrs</div>
+      <div class="range-sub">likely range: ${r.low.toFixed(1)}–${r.high.toFixed(1)} yrs</div>
       ${r.humanEq ? `<div class="human-eq">≈ ${r.humanEq} in human years</div>` : ""}
       <div class="zone-pill">${r.zone.label}</div>
+      ${r.overweightPct != null ? `<div class="percentile-pill">Top ${r.overweightPct}% most overweight for ${r.species}s</div>` : ""}
       <div class="explanation">${explanationLine}</div>
-      <div class="delta-indicator">${DELTA_COPY[r.deltaCategory]}</div>
+      <div class="delta-indicator">${deltaCopy(r.delta, r.chronAge, r.deltaCategory)}</div>
       ${r.species==="cat" ? `<div class="feline-note">Feline estimate — the science here is still maturing, so this range runs a bit wider.</div>` : ""}
+      <div class="confidence-note">Age input confidence: ${Math.round(r.ageConfidence*100)}%${r.ageConfidence>=1?' (exact birth date)':''}</div>
     </div>
     <p class="lead" style="text-align:center;">Based on ${r.n} observations · confidence sharpens with each round.</p>
     ${!isLast ? `

@@ -33,9 +33,9 @@ test("dachshund: activity-minutes signal shifts the estimate vs. a masked self-r
   assert.ok(withDeficit.delta > withoutDeficit.delta, "objectively-measured low activity should surface a signal a subjective self-report could miss");
 });
 test("expectedFIContinuous is continuous at the middle/senior fraction boundary", () => {
-  // small dog: middleAge=6, seniorAge=10 -> chronAge=6 sits exactly at fraction=1
-  assert.equal(M.ageFraction("dog", 6, 8), 1);
-  assert.equal(M.expectedFIContinuous("dog", 6, 8), M.FRAILTY_MODEL_CONFIG.EXPECTED_FI_ANCHORS.middle);
+  // small dog: seniorAge=11, middleAge=11*0.6=6.6 -> chronAge=6.6 sits exactly at fraction=1
+  assert.equal(M.ageFraction("dog", 6.6, 8), 1);
+  assert.equal(M.expectedFIContinuous("dog", 6.6, 8), M.FRAILTY_MODEL_CONFIG.EXPECTED_FI_ANCHORS.middle);
 });
 
 /* ---------- 3. Great Dane ~8yo genuinely declining ---------- */
@@ -77,14 +77,112 @@ test("young unhealthy dog still reads elevated frailty, hits the delta clamp", (
 
 /* ---------- 6. Unknown DOB / estimated age: estimation path still works ---------- */
 test("unknown-DOB cat: estimation pipeline runs cleanly off a guessed age", () => {
-  const guessedAge = 8; // AGE_GUESS.senior_guess from index.html
+  // Previously index.html used a flat AGE_GUESS.senior_guess=8 for every
+  // species/size, which for cats fell in the "middle" life-stage bucket
+  // instead of "senior" — a pre-existing quirk. seniorGuessAge() (this pass)
+  // fixes it by asking per species/size instead of using a flat guess.
+  const guessedAge = M.seniorGuessAge("cat", 4);
+  assert.equal(guessedAge, 11);
   const r = M.estimatePhysiologicalAge({species:"cat", chronAge:guessedAge, weightKg:4, breed:"Maine Coon", observedFI:0.18});
   assert.ok(Number.isFinite(r.center) && r.center > 0);
-  // Pre-existing quirk (not introduced by this fix): the "looks senior" age
-  // guess (8) falls in the cat model's "middle" bucket (young<7, middle<11),
-  // not "senior" — cat life-stage cutoffs and the age-guess buckets aren't
-  // aligned. Documented here, not silently treated as a bug in this pass.
-  assert.equal(M.lifeStage("cat", guessedAge, 4), "middle");
+  assert.equal(M.lifeStage("cat", guessedAge, 4), "senior");
+});
+
+/* ---------- 7. Chondrodystrophic breed modifier, no double-count on overlap ---------- */
+test("dachshund: chondro-only modifier applies, smaller than a bulldog's brachy modifier", () => {
+  const dachshund = M.breedModifier("Miniature Dachshund");
+  const bulldog = M.breedModifier("English Bulldog");
+  assert.ok(dachshund > 0);
+  assert.ok(dachshund < bulldog);
+});
+test("shih tzu: in both brachy and chondro lists, gets max not sum", () => {
+  const shihTzu = M.breedModifier("Shih Tzu");
+  assert.equal(shihTzu, M.FRAILTY_MODEL_CONFIG.BRACHY_BREED_FI_MODIFIER);
+});
+
+/* ---------- 8. Cat delta dampening — no feline FI-age curve exists ---------- */
+test("cat delta is dampened relative to an identical-input dog", () => {
+  const args = {chronAge:8, weightKg:5, breed:"Mixed", observedFI:0.3};
+  const dog = M.estimatePhysiologicalAge({...args, species:"dog"});
+  const cat = M.estimatePhysiologicalAge({...args, species:"cat"});
+  assert.ok(Math.abs(cat.delta) < Math.abs(dog.delta));
+});
+
+/* ---------- 9. Size-based senior guess replaces the old flat 8yr guess ---------- */
+test("senior guess age varies by dog size, flat for cats", () => {
+  assert.ok(M.seniorGuessAge("dog", 60) < M.seniorGuessAge("dog", 5));
+  assert.equal(M.seniorGuessAge("cat", 4), 11);
+  assert.equal(M.seniorGuessAge("cat", 8), 11);
+});
+
+/* ---------- 10. Dog human-year parity (Wang 2020) ---------- */
+test("dogHumanEquivalent matches the Wang 2020 worked examples", () => {
+  assert.ok(Math.abs(M.dogHumanEquivalent(1) - 31) < 1);
+  assert.ok(Math.abs(M.dogHumanEquivalent(12) - 70) <= 1);
+});
+
+/* ---------- 11. Extensible breed/size activity thresholds ---------- */
+test("activity threshold: breed override beats size-class default", () => {
+  // Border Collie is medium-sized by weight but overridden to a higher bar
+  assert.equal(M.getActivityMinutesThreshold("dog", 20, "Border Collie"), 90);
+  assert.notEqual(M.getActivityMinutesThreshold("dog", 20, "Border Collie"),
+                   M.ACTIVITY_MINUTES_TABLE.dog.medium);
+});
+test("activity threshold: falls back to size-class default when breed unknown", () => {
+  assert.equal(M.getActivityMinutesThreshold("dog", 20, "Mixed breed"), M.ACTIVITY_MINUTES_TABLE.dog.medium);
+  assert.equal(M.getActivityMinutesThreshold("dog", 20, ""), M.ACTIVITY_MINUTES_TABLE.dog.medium);
+});
+test("scoreActivityMinutes still works without a breed argument (back-compat)", () => {
+  assert.equal(M.scoreActivityMinutes("dog", 10, 8), 1);
+});
+
+/* ---------- 12. Overweight percentile — real prevalence-anchored ---------- */
+test("overweightPercentile: BCS anchors match cited prevalence stats exactly", () => {
+  assert.equal(M.overweightPercentile("dog", 8), 22); // cited "22% obese" dogs
+  assert.equal(M.overweightPercentile("dog", 6), 59); // cited "59% overweight-or-obese" dogs
+  assert.equal(M.overweightPercentile("cat", 8), 33); // cited "33% obese" cats
+  assert.equal(M.overweightPercentile("cat", 6), 61); // cited "61% overweight-or-obese" cats
+});
+test("overweightPercentile: ideal/underweight BCS returns null, not a fabricated number", () => {
+  assert.equal(M.overweightPercentile("dog", 5), null);
+  assert.equal(M.overweightPercentile("dog", 2), null);
+});
+test("overweightPercentile: monotonic — heavier BCS never ranks a lower percentile", () => {
+  assert.ok(M.overweightPercentile("dog", 9) < M.overweightPercentile("dog", 8));
+  assert.ok(M.overweightPercentile("dog", 8) < M.overweightPercentile("dog", 7));
+  assert.ok(M.overweightPercentile("dog", 7) < M.overweightPercentile("dog", 6));
+});
+
+/* ---------- 13. Confidence-weighted age fusion ---------- */
+test("fuseAge: exact DOB signal dominates a low-confidence guess", () => {
+  const r = M.fuseAge([{years:8, confidence:1}, {years:3, confidence:0.1}]);
+  assert.ok(Math.abs(r.years - 8) < 0.5, "high-confidence signal should dominate the average");
+});
+test("fuseAge: zero-confidence signal (untrained photo model) contributes nothing", () => {
+  const withPhoto = M.fuseAge([{years:8, confidence:1}, {years:1, confidence:0}]);
+  const withoutPhoto = M.fuseAge([{years:8, confidence:1}]);
+  assert.equal(withPhoto.years, withoutPhoto.years, "a confidence:0 signal must not shift the fused age at all");
+});
+test("fuseAge: no valid signals returns null years, zero confidence", () => {
+  const r = M.fuseAge([]);
+  assert.equal(r.years, null);
+  assert.equal(r.confidence, 0);
+});
+
+/* ---------- 14. Delta as a percentage of chronological age ---------- */
+test("deltaPercentOfAge: real ratio, not an invented number", () => {
+  assert.equal(M.deltaPercentOfAge(1, 10), 10);
+  assert.equal(M.deltaPercentOfAge(-2, 8), -25);
+  assert.equal(M.deltaPercentOfAge(1, 0), 0); // guards divide-by-zero
+});
+
+/* ---------- 15. BCS chart data sanity ---------- */
+test("BCS_CHART: 9-point scale for both species, ideal band at 4-5", () => {
+  ["dog","cat"].forEach(species=>{
+    assert.equal(M.BCS_CHART[species].length, 9);
+    const ideal = M.BCS_CHART[species].filter(c=>c.bcs===4||c.bcs===5);
+    ideal.forEach(c=> assert.ok(/ideal/i.test(c.label)));
+  });
 });
 
 console.log(failed ? `\n${failed} test(s) failed` : "\nAll tests passed");
