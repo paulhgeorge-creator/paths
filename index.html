@@ -5,118 +5,117 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pawl - Vitality Check</title>
 <style>
+  /* Same design language as the pv-root baseline widget, applied to every
+     page (BCS, Part 1-4, results, completion) so the whole flow reads as one
+     product. Duplicates the widget's own scoped rules (harmless, idempotent)
+     rather than editing PV_WIDGET_HTML - that block stays byte-identical. */
   :root{
-    --ink:#1c2a24; --bg:#faf7f0; --card:#ffffff; --line:#e6e0d2;
-    --brand:#2f6b52; --brand-light:#e7f2eb; --accent:#e8a33d;
-    --warn:#c65a2e; --muted:#7a7568;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --pv-cream:#fff8f1; --pv-ash:#e2e8f0; --pv-ink:#000000; --pv-blue:#006eff;
+    --pv-muted:#6b7280; --pv-warn:#c2410c; --pv-warn-bg:#fdece2;
+    --pv-font-display:'Cormorant','Editorial New',ui-serif,Georgia,serif;
+    --pv-font-body:'Inter','Founders Grotesk',ui-sans-serif,system-ui,sans-serif;
+    --pv-radius-pill:60px;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.45;}
-  .wrap{max-width:640px;margin:0 auto;padding:24px 20px 80px;}
-  header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-  header.top .logo{font-weight:800;font-size:20px;color:var(--brand);letter-spacing:-0.02em;}
-  .progress{display:flex;gap:6px;margin-bottom:24px;}
-  .progress .seg{flex:1;height:6px;border-radius:3px;background:var(--line);}
-  .progress .seg.done{background:var(--brand);}
-  .progress .seg.current{background:var(--accent);}
-  h1{font-size:26px;margin:0 0 6px;letter-spacing:-0.01em;}
-  p.lead{color:var(--muted);margin:0 0 20px;font-size:15px;}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px;}
-  .q{margin-bottom:22px;}
-  .q label.qtext{display:block;font-weight:600;margin-bottom:10px;font-size:15px;}
-  .q .hint{color:var(--muted);font-size:13px;margin-top:-6px;margin-bottom:10px;}
-  .opts{display:flex;gap:8px;flex-wrap:wrap;}
-  .opt{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;user-select:none;transition:all .12s;}
-  .opt:hover{border-color:var(--brand);}
-  .opt.sel{background:var(--brand);border-color:var(--brand);color:#fff;}
-  input[type=text],input[type=number],input[type=date],input[type=file],select{
-    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:#fff;color:var(--ink);
+  body{margin:0;background:var(--pv-cream);color:var(--pv-ink);font-family:var(--pv-font-body);letter-spacing:-0.02em;line-height:1.45;}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 20px 80px;}
+
+  .pv-root{
+    display:block;background:var(--pv-cream);color:var(--pv-ink);
+    font-family:var(--pv-font-body);letter-spacing:-0.02em;
+    -webkit-font-feature-settings:"clig","liga";font-feature-settings:"clig","liga";
+    border:1.5px solid var(--pv-ash);max-width:960px;margin:0 auto 16px;box-sizing:border-box;
   }
-  input[type=range]{width:100%;}
-  .bcs-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  button.primary{background:var(--brand);color:#fff;border:none;border-radius:12px;padding:14px 20px;font-size:16px;font-weight:700;cursor:pointer;width:100%;}
-  button.primary:hover{background:#25543f;}
-  button.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand);border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;width:100%;margin-top:10px;}
-  .species-toggle{display:flex;gap:10px;margin-bottom:18px;}
-  .species-toggle .opt{flex:1;text-align:center;font-weight:600;}
-  .unknown-toggle{margin-top:2px;margin-bottom:10px;font-size:13px;color:var(--muted);}
-  .unknown-toggle label{cursor:pointer;}
+  .pv-root *, .pv-root *::before, .pv-root *::after{ box-sizing:border-box; }
 
-  /* weight unit toggle */
-  .weight-row{display:flex;gap:8px;align-items:stretch;}
-  .weight-row input{flex:1;}
-  .unit-toggle{display:flex;gap:4px;flex-shrink:0;}
-  .unit-toggle .opt{padding:10px 12px;font-size:13px;}
+  .pv-header{display:flex;align-items:center;justify-content:space-between;padding:20px clamp(18px,3vw,40px);border-bottom:1.5px solid var(--pv-ash);gap:16px;flex-wrap:wrap;}
+  .pv-wordmark{font-family:var(--pv-font-display);font-weight:400;font-size:clamp(17px,2vw,21px);color:var(--pv-blue);}
+  .pv-header-illos{display:flex;align-items:center;gap:10px;}
+  .pv-header-illos svg{width:34px;height:auto;}
+  .pv-ring-wrap{display:flex;align-items:center;gap:10px;}
+  .pv-ring-label{font-weight:300;font-size:12px;text-transform:uppercase;color:var(--pv-blue);}
+  .pv-ring-svg circle{fill:none;stroke-linecap:round;}
+  .pv-ring-bg{stroke:var(--pv-ash);stroke-width:3;}
+  .pv-ring-fg{stroke:var(--pv-blue);stroke-width:3;transition:stroke-dashoffset .4s ease;}
 
-  /* split date of birth */
-  .dob-row{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;}
+  .pv-body{padding:clamp(20px,3vw,36px);}
+  .pv-eyebrow{font-weight:300;font-size:13px;text-transform:uppercase;color:var(--pv-blue);margin:0 0 6px;}
+  .pv-headline{font-family:var(--pv-font-display);font-weight:300;color:var(--pv-blue);font-size:clamp(24px,3vw,34px);line-height:1;margin:0 0 12px;}
+  .pv-hint{color:var(--pv-muted);font-size:13px;margin:0 0 10px;}
 
-  /* photo upload */
-  .photo-status{color:var(--muted);font-size:13px;margin-top:6px;}
+  .pv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px 28px;align-items:start;}
+  .pv-field{display:flex;flex-direction:column;gap:6px;margin-bottom:22px;}
+  .pv-field label{font-weight:300;font-size:13px;text-transform:uppercase;color:var(--pv-blue);}
+  .pv-field input[type="text"], .pv-field input[type="number"]{
+    font-family:var(--pv-font-display);font-weight:300;font-size:clamp(18px,2vw,22px);color:var(--pv-ink);
+    background:transparent;border:none;border-bottom:1.5px solid var(--pv-ash);padding:6px 0;outline:none;letter-spacing:-0.02em;width:100%;
+  }
+  .pv-field input:focus{border-bottom-color:var(--pv-blue);}
+  .pv-subrow{display:flex;gap:16px;}
+  .pv-subrow .pv-field{flex:1;margin-bottom:0;}
 
-  /* body-condition chart step */
-  .bcs-chart-preview{text-align:center;}
-  .bcs-chart-thumb{max-width:100%;max-height:160px;border-radius:12px;border:1px solid var(--line);object-fit:contain;background:#fff;cursor:pointer;}
-  .chart-btn{display:inline-block;margin-top:8px;font-size:13px;color:var(--brand);text-decoration:none;font-weight:600;border:1px solid var(--brand);border-radius:999px;padding:6px 14px;}
-  .chart-btn:hover{background:var(--brand-light);}
-  .bcs-readout{margin-top:14px;text-align:center;}
-  .bcs-readout strong{font-size:15px;}
-  .bcs-readout p{color:var(--muted);font-size:13px;margin:4px 0 0;}
+  .pv-toggle-row, .pv-segmented, .pv-chip-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .pv-toggle, .pv-segment, .pv-chip{
+    border:1.5px solid var(--pv-ash);border-radius:var(--pv-radius-pill);padding:9px 18px;font-weight:300;font-size:13px;
+    text-transform:uppercase;letter-spacing:-0.02em;color:var(--pv-blue);background:transparent;cursor:pointer;
+    transition:border-color .15s ease;display:inline-flex;align-items:center;gap:8px;font-family:var(--pv-font-body);
+  }
+  .pv-toggle svg{width:18px;height:auto;}
+  .pv-toggle.pv-selected, .pv-segment.pv-selected, .pv-chip.pv-selected{border-color:var(--pv-blue);border-width:1.5px;background:rgba(0,110,255,.06);}
 
-  /* result card */
-  .result{background:linear-gradient(155deg,var(--brand) 0%,#1f4c3a 100%);color:#fff;border-radius:20px;padding:28px 24px;text-align:center;margin-bottom:18px;}
-  .stage-pill{display:inline-block;padding:5px 14px;border-radius:999px;background:rgba(255,255,255,.15);font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:12px;}
-  .result-headline{font-size:22px;margin:0 0 8px;letter-spacing:-0.01em;}
-  .stage-explain{font-size:13px;opacity:.85;margin:0 0 20px;max-width:440px;margin-left:auto;margin-right:auto;}
-  .vet-banner{background:#fbe9e2;border:1px solid var(--warn);color:#8a3a1c;border-radius:12px;padding:14px 16px;font-size:14px;margin-bottom:16px;}
-  .feline-note{font-size:12px;opacity:.8;margin-top:14px;font-style:italic;}
-  .cta-row{display:flex;gap:10px;}
-  footer.note{color:var(--muted);font-size:12px;text-align:center;margin-top:30px;}
+  .pv-slider-wrap{display:flex;flex-direction:column;gap:6px;}
+  .pv-slider-value{font-family:var(--pv-font-display);font-weight:100;font-size:clamp(28px,4vw,40px);color:var(--pv-blue);}
+  input[type="range"]{-webkit-appearance:none;width:100%;height:2px;background:var(--pv-ash);outline:none;}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--pv-cream);border:1.5px solid var(--pv-blue);cursor:pointer;}
+  input[type="range"]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--pv-cream);border:1.5px solid var(--pv-blue);cursor:pointer;}
+  .pv-scale-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--pv-muted);margin-top:4px;text-transform:uppercase;}
 
-  /* primary stats: Pet Age / Human Age */
-  .stats-row{display:flex;justify-content:center;gap:28px;margin-bottom:22px;flex-wrap:wrap;}
-  .stat-block{min-width:120px;}
-  .stat-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.75;margin-bottom:2px;}
-  .stat-value{font-size:40px;font-weight:800;line-height:1.1;}
-  .stat-value .unit{font-size:16px;font-weight:600;opacity:.8;}
-  .stat-note{font-size:11px;opacity:.75;max-width:150px;margin:4px auto 0;}
+  .pv-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:20px clamp(18px,3vw,40px);border-top:1.5px solid var(--pv-ash);}
+  .pv-pill-btn{
+    border:1.5px solid var(--pv-blue);border-radius:var(--pv-radius-pill);background:transparent;color:var(--pv-blue);
+    font-family:var(--pv-font-body);font-weight:300;font-size:15px;letter-spacing:-0.02em;padding:13px 38px;
+    cursor:pointer;text-transform:uppercase;transition:opacity .15s ease;width:100%;
+  }
+  .pv-pill-btn.pv-ghost{background:transparent;}
+  .pv-pill-btn.pv-small{padding:8px 20px;font-size:12px;width:auto;}
+  .pv-pill-btn:hover{opacity:.75;}
 
-  /* WHOOP-style health score */
-  .health-score-card{display:flex;align-items:center;justify-content:center;gap:16px;background:rgba(0,0,0,.15);border-radius:16px;padding:16px 18px;text-align:left;}
-  .score-ring{--pct:0;--ring-color:#4caf7d;width:80px;height:80px;border-radius:50%;flex-shrink:0;
-    background:conic-gradient(var(--ring-color) calc(var(--pct)*1%), rgba(255,255,255,.18) 0);
-    display:flex;align-items:center;justify-content:center;}
-  .score-ring-inner{width:62px;height:62px;border-radius:50%;background:#1f4c3a;color:#fff;
-    display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;}
-  .score-title{font-size:13px;font-weight:700;}
-  .score-zone{font-size:12px;opacity:.85;margin-bottom:4px;}
-  .score-caption{font-size:12px;opacity:.85;max-width:220px;}
+  .pv-result{display:flex;align-items:center;gap:14px;}
+  .pv-result-ring-wrap{position:relative;width:56px;height:56px;flex-shrink:0;}
+  .pv-result-ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
+  .pv-result-ring-bg{fill:none;stroke:var(--pv-ash);stroke-width:5;}
+  .pv-result-ring-fg{fill:none;stroke:var(--pv-blue);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 1s ease;}
+  .pv-result-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--pv-font-display);font-weight:300;font-size:15px;color:var(--pv-blue);}
+  .pv-result-text{display:flex;flex-direction:column;}
+  .pv-result-label{font-weight:300;font-size:12px;text-transform:uppercase;color:var(--pv-blue);}
+  .pv-result-sub{font-weight:400;font-size:14px;color:var(--pv-ink);max-width:320px;}
 
-  /* watch-out-for / what-helps */
-  .insight-card{text-align:left;}
-  .insight-title{font-weight:700;font-size:15px;margin-bottom:10px;}
-  .insight-card ul{margin:0;padding-left:20px;}
-  .insight-card li{font-size:14px;color:var(--ink);margin-bottom:6px;line-height:1.4;}
+  /* supplemental components (not in the original widget - same language) */
+  .pv-card{border:1.5px solid var(--pv-ash);border-radius:14px;padding:18px 20px;margin-bottom:16px;text-align:left;}
+  .pv-card-center{text-align:center;}
+  .pv-stat-row{display:flex;justify-content:center;gap:36px;margin-bottom:20px;flex-wrap:wrap;}
+  .pv-stat-block{text-align:center;min-width:110px;}
+  .pv-stat-label{font-weight:300;font-size:12px;text-transform:uppercase;color:var(--pv-blue);margin-bottom:2px;}
+  .pv-stat-value{font-family:var(--pv-font-display);font-weight:300;font-size:clamp(30px,4vw,40px);color:var(--pv-blue);line-height:1.1;}
+  .pv-stat-value .pv-unit{font-size:15px;font-weight:400;}
+  .pv-stat-note{font-size:11px;color:var(--pv-muted);max-width:160px;margin:4px auto 0;}
+  .pv-warn-banner{background:var(--pv-warn-bg);border:1.5px solid var(--pv-warn);color:var(--pv-warn);border-radius:12px;padding:14px 16px;font-size:14px;margin-bottom:16px;}
+  .pv-italic-note{font-size:12px;color:var(--pv-muted);font-style:italic;margin-top:10px;}
+  .pv-insight-title{font-weight:400;font-size:15px;margin-bottom:10px;color:var(--pv-ink);}
+  .pv-card ul{margin:0;padding-left:20px;}
+  .pv-card li{font-size:14px;color:var(--pv-ink);margin-bottom:6px;line-height:1.4;}
+  .pv-badge{display:inline-block;background:rgba(0,110,255,.08);color:var(--pv-blue);font-weight:400;font-size:13px;padding:6px 14px;border-radius:999px;margin-bottom:14px;}
+  .pv-tone{font-size:13px;font-weight:500;color:var(--pv-ink);margin-top:6px;}
+  .pv-bar{height:8px;border-radius:999px;background:var(--pv-ash);overflow:hidden;}
+  .pv-bar-fill{height:100%;background:var(--pv-blue);border-radius:999px;transition:width .2s;}
+  .pv-bar-copy{font-size:13px;color:var(--pv-muted);margin-top:6px;}
+  .pv-divider{margin-top:14px;padding-top:14px;border-top:1.5px solid var(--pv-ash);}
+  .pv-cta-row{display:flex;gap:10px;}
+  .pv-footnote{color:var(--pv-muted);font-size:12px;text-align:center;margin-top:20px;}
 
-  /* completion page */
-  .complete-badge{display:inline-block;background:var(--brand-light);color:var(--brand);font-weight:700;font-size:13px;padding:6px 14px;border-radius:999px;margin-bottom:14px;}
-  .multiplier-card{padding:24px;}
-  .multiplier-card .stat-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;opacity:.8;}
-  .multiplier-value{font-size:48px;font-weight:800;margin:6px 0;}
-  .multiplier-explain{font-size:13px;opacity:.9;max-width:440px;margin:6px auto 10px;}
-  .multiplier-tone{font-size:13px;opacity:.95;font-weight:600;}
-  .section-title{font-weight:700;font-size:15px;margin-bottom:10px;}
-  .bcs-summary{margin:0 0 4px;}
-  .bcs-desc{color:var(--muted);font-size:13px;margin:0;}
-  .soft-percentile{font-size:13px;color:var(--ink);margin:10px 0 0;}
-  .balance-summary{margin-top:16px;}
-  .balance-label{font-size:13px;font-weight:600;margin-bottom:6px;}
-  .balance-bar{height:8px;border-radius:999px;background:var(--line);overflow:hidden;}
-  .balance-fill{height:100%;background:var(--brand);border-radius:999px;transition:width .2s;}
-  .balance-copy{font-size:13px;color:var(--muted);margin-top:6px;}
-  .food-equation{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  @media (max-width:520px){
+    .pv-footer{flex-direction:column;align-items:stretch;}
+  }
 </style>
 </head>
 <body>
@@ -210,6 +209,7 @@ const state = {
     yearsOnlyAge:"",
     bcs:5,
     photoFile:null, photoEstimate:null,
+    healthGoals:[], sleepHours:null, // captured by the pv-widget baseline; not yet wired into scoring - see README
   },
   answers:{}, // id -> score
   followup:{
@@ -309,9 +309,9 @@ function speciesText(q){
 
 function optRow(id, opts, hint){
   const cur = state.answers[id];
-  return `<div class="opts" data-qid="${id}">` +
-    opts.map(o => `<div class="opt ${cur===o.v?'sel':''}" data-val="${o.v}">${o.label}</div>`).join("") +
-    `</div>` + (hint?`<div class="hint">${hint}</div>`:"");
+  return `<div class="pv-segmented" data-qid="${id}">` +
+    opts.map(o => `<button type="button" class="pv-segment ${cur===o.v?'pv-selected':''}" data-val="${o.v}">${o.label}</button>`).join("") +
+    `</div>` + (hint?`<p class="pv-hint">${hint}</p>`:"");
 }
 
 function minutesInput(q){
@@ -320,21 +320,41 @@ function minutesInput(q){
 }
 
 function questionBlock(q, opts){
-  return `<div class="q">
-    <label class="qtext">${speciesText(q)}</label>
-    ${q.hint?`<div class="hint">${q.hint}</div>`:""}
+  return `<div class="pv-field" style="grid-column:1/-1;">
+    <label>${speciesText(q)}</label>
+    ${q.hint?`<p class="pv-hint">${q.hint}</p>`:""}
     ${q.type==="minutes" ? minutesInput(q) : optRow(q.id, opts || SCALE3)}
   </div>`;
 }
 
-function progressHTML(activeIdx){
-  const total = 5; // baseline+bcs+part1 counted as one visual stage, then 2,3,4, then done
-  let segs = "";
-  for (let i=0;i<4;i++){
-    const cls = i < activeIdx ? "done" : (i===activeIdx ? "current" : "");
-    segs += `<div class="seg ${cls}"></div>`;
-  }
-  return `<div class="progress">${segs}</div>`;
+/* ---------- Shared pv- page shell (design consistency across every page) ---------- */
+const PV_STEP_ORDER = ["bcs","part1","result1","part2","result2","part3","result3","part4","result4","complete"];
+function pvStepPct(step){
+  const idx = PV_STEP_ORDER.indexOf(step);
+  return idx < 0 ? 0 : Math.round(((idx+1)/PV_STEP_ORDER.length)*100);
+}
+const PV_RING_CIRC = 62.8;
+function pvRingHTML(pct){
+  const offset = PV_RING_CIRC * (1 - pct/100);
+  return `
+    <div class="pv-ring-wrap">
+      <span class="pv-ring-label">${pct}% complete</span>
+      <svg class="pv-ring-svg" width="26" height="26" viewBox="0 0 26 26">
+        <circle class="pv-ring-bg" cx="13" cy="13" r="10"></circle>
+        <circle class="pv-ring-fg" cx="13" cy="13" r="10" stroke-dasharray="${PV_RING_CIRC}" stroke-dashoffset="${offset}"></circle>
+      </svg>
+    </div>`;
+}
+function pvShell(wordmark, step, bodyHtml, footerHtml){
+  return `
+    <section class="pv-root">
+      <div class="pv-header">
+        <div class="pv-wordmark">${wordmark} - Pet Vitals</div>
+        ${pvRingHTML(pvStepPct(step))}
+      </div>
+      <div class="pv-body">${bodyHtml}</div>
+      ${footerHtml ? `<div class="pv-footer">${footerHtml}</div>` : ""}
+    </section>`;
 }
 
 function render(){
@@ -349,146 +369,516 @@ function render(){
   if (s === "complete") return renderComplete();
 }
 
-function photoStatusLine(b){
-  if (!b.photoFile) return "No photo selected yet.";
-  const est = b.photoEstimate;
-  if (!est || est.status === "checking") return `Selected: ${b.photoFile.name} - analyzing…`;
-  if (est.confidence > 0) return `Selected: ${b.photoFile.name} - estimated ~${Math.round(est.years)} yrs (used as one signal, not the final answer).`;
-  return `Selected: ${b.photoFile.name} - no confident read yet (photo model isn't trained), other signals used instead.`;
+
+/* ---------- Pet Vitals widget (pasted baseline UI) ----------
+   This is the provided embeddable fragment, kept intact: every CSS selector
+   scoped under .pv-root, every custom property --pv- prefixed, all its own
+   JS logic (SVGs, toggles, progress ring, toy vitality score) unchanged.
+   Two text-only fixes applied per the project's standing em-dash-free rule
+   (wordmark, result sentence) - no layout/feature/behavior changed.
+   One necessary mechanical adaptation: the original wrapped its script in an
+   IIFE that located its own root via document.currentScript - that API only
+   works for a script tag executing inline, and script tags inserted via
+   innerHTML don't auto-run in browsers. initPetVitalsWidget(root) below is
+   the same function body with the root passed in directly instead of
+   self-located - not a feature/behavior change, just how it has to be
+   invoked when it's part of a larger single-page app instead of a standalone
+   drop-in. wirePetVitalsToState() is entirely separate/additive - extra
+   listeners on the same elements, feeding the real app state alongside the
+   widget's own (untouched) handlers. */
+const PV_WIDGET_HTML = `
+<section class="pv-root">
+  <style>
+    .pv-root{
+      --pv-cream:#fff8f1;
+      --pv-ash:#e2e8f0;
+      --pv-ink:#000000;
+      --pv-blue:#006eff;
+      --pv-font-display:'Cormorant','Editorial New',ui-serif,Georgia,serif;
+      --pv-font-body:'Inter','Founders Grotesk',ui-sans-serif,system-ui,sans-serif;
+      --pv-radius-pill:60px;
+
+      display:block;
+      background:var(--pv-cream);
+      color:var(--pv-ink);
+      font-family:var(--pv-font-body);
+      letter-spacing:-0.02em;
+      -webkit-font-feature-settings:"clig","liga";
+      font-feature-settings:"clig","liga";
+      border:1.5px solid var(--pv-ash);
+      max-width:960px;
+      margin:0 auto;
+      box-sizing:border-box;
+    }
+    .pv-root *, .pv-root *::before, .pv-root *::after{ box-sizing:border-box; }
+
+    .pv-header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:20px clamp(18px,3vw,40px);
+      border-bottom:1.5px solid var(--pv-ash);
+      gap:16px; flex-wrap:wrap;
+    }
+    .pv-wordmark{
+      font-family:var(--pv-font-display); font-weight:400;
+      font-size:clamp(17px,2vw,21px); color:var(--pv-blue);
+    }
+    .pv-header-illos{ display:flex; align-items:center; gap:10px; }
+    .pv-header-illos svg{ width:34px; height:auto; }
+    .pv-ring-wrap{ display:flex; align-items:center; gap:10px; }
+    .pv-ring-label{ font-weight:300; font-size:12px; text-transform:uppercase; color:var(--pv-blue); }
+    .pv-ring-svg circle{ fill:none; stroke-linecap:round; }
+    .pv-ring-bg{ stroke:var(--pv-ash); stroke-width:3; }
+    .pv-ring-fg{ stroke:var(--pv-blue); stroke-width:3; transition:stroke-dashoffset .4s ease; }
+
+    .pv-body{ padding:clamp(20px,3vw,36px); }
+    .pv-eyebrow{
+      font-weight:300; font-size:13px; text-transform:uppercase;
+      color:var(--pv-blue); margin:0 0 6px;
+    }
+    .pv-headline{
+      font-family:var(--pv-font-display); font-weight:300; color:var(--pv-blue);
+      font-size:clamp(24px,3vw,34px); line-height:1; margin:0 0 24px;
+    }
+
+    .pv-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:20px 28px;
+      align-items:start;
+    }
+    .pv-field{ display:flex; flex-direction:column; gap:6px; }
+    .pv-field label{
+      font-weight:300; font-size:13px; text-transform:uppercase; color:var(--pv-blue);
+    }
+    .pv-field input[type="text"], .pv-field input[type="number"]{
+      font-family:var(--pv-font-display); font-weight:300;
+      font-size:clamp(18px,2vw,22px); color:var(--pv-ink);
+      background:transparent; border:none; border-bottom:1.5px solid var(--pv-ash);
+      padding:6px 0; outline:none; letter-spacing:-0.02em; width:100%;
+    }
+    .pv-field input:focus{ border-bottom-color:var(--pv-blue); }
+    .pv-subrow{ display:flex; gap:16px; }
+    .pv-subrow .pv-field{ flex:1; }
+
+    .pv-toggle-row, .pv-segmented, .pv-chip-grid{ display:flex; flex-wrap:wrap; gap:8px; }
+    .pv-toggle, .pv-segment, .pv-chip{
+      border:1.5px solid var(--pv-ash); border-radius:var(--pv-radius-pill);
+      padding:9px 18px; font-weight:300; font-size:13px; text-transform:uppercase;
+      letter-spacing:-0.02em; color:var(--pv-blue); background:transparent;
+      cursor:pointer; transition:border-color .15s ease; display:inline-flex;
+      align-items:center; gap:8px;
+    }
+    .pv-toggle svg{ width:18px; height:auto; }
+    .pv-toggle.pv-selected, .pv-segment.pv-selected, .pv-chip.pv-selected{
+      border-color:var(--pv-blue); border-width:1.5px;
+    }
+
+    .pv-slider-wrap{ display:flex; flex-direction:column; gap:6px; }
+    .pv-slider-value{
+      font-family:var(--pv-font-display); font-weight:100;
+      font-size:clamp(28px,4vw,40px); color:var(--pv-blue);
+    }
+    .pv-field input[type="range"]{
+      -webkit-appearance:none; width:100%; height:2px; background:var(--pv-ash); outline:none;
+    }
+    .pv-field input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
+      background:var(--pv-cream); border:1.5px solid var(--pv-blue); cursor:pointer;
+    }
+    .pv-field input[type="range"]::-moz-range-thumb{
+      width:15px; height:15px; border-radius:50%;
+      background:var(--pv-cream); border:1.5px solid var(--pv-blue); cursor:pointer;
+    }
+
+    .pv-footer{
+      display:flex; align-items:center; justify-content:space-between; gap:20px;
+      flex-wrap:wrap; padding:20px clamp(18px,3vw,40px);
+      border-top:1.5px solid var(--pv-ash);
+    }
+    .pv-pill-btn{
+      border:1.5px solid var(--pv-blue); border-radius:var(--pv-radius-pill);
+      background:transparent; color:var(--pv-blue); font-family:var(--pv-font-body);
+      font-weight:300; font-size:15px; letter-spacing:-0.02em; padding:13px 38px;
+      cursor:pointer; text-transform:uppercase; transition:opacity .15s ease;
+    }
+    .pv-result{
+      display:none; align-items:center; gap:14px;
+    }
+    .pv-result.pv-show{ display:flex; }
+    .pv-result-ring-wrap{ position:relative; width:56px; height:56px; }
+    .pv-result-ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+    .pv-result-ring-bg{ fill:none; stroke:var(--pv-ash); stroke-width:5; }
+    .pv-result-ring-fg{ fill:none; stroke:var(--pv-blue); stroke-width:5; stroke-linecap:round; transition:stroke-dashoffset 1s ease; }
+    .pv-result-num{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      font-family:var(--pv-font-display); font-weight:300; font-size:15px; color:var(--pv-blue);
+    }
+    .pv-result-text{ display:flex; flex-direction:column; }
+    .pv-result-label{ font-weight:300; font-size:12px; text-transform:uppercase; color:var(--pv-blue); }
+    .pv-result-sub{ font-weight:400; font-size:14px; color:var(--pv-ink); max-width:320px; }
+
+    @media (max-width:520px){
+      .pv-footer{ flex-direction:column; align-items:stretch; }
+      .pv-pill-btn{ width:100%; }
+    }
+  </style>
+
+  <div class="pv-header">
+    <div class="pv-wordmark">Baseline - Pet Vitals</div>
+    <div class="pv-header-illos" data-pv="header-illos"></div>
+    <div class="pv-ring-wrap">
+      <span class="pv-ring-label" data-pv="ring-label">0% complete</span>
+      <svg class="pv-ring-svg" width="26" height="26" viewBox="0 0 26 26">
+        <circle class="pv-ring-bg" cx="13" cy="13" r="10"></circle>
+        <circle class="pv-ring-fg" data-pv="nav-ring" cx="13" cy="13" r="10" stroke-dasharray="62.8" stroke-dashoffset="62.8"></circle>
+      </svg>
+    </div>
+  </div>
+
+  <div class="pv-body">
+    <p class="pv-eyebrow">A Whoop for the whole household</p>
+    <h2 class="pv-headline">Build your pet's vitals baseline</h2>
+
+    <div class="pv-grid">
+
+      <div class="pv-field">
+        <label>Pet type</label>
+        <div class="pv-toggle-row">
+          <button type="button" class="pv-toggle" data-pv="type-dog"><span data-pv="icon-dog-slot"></span>Dog</button>
+          <button type="button" class="pv-toggle" data-pv="type-cat"><span data-pv="icon-cat-slot"></span>Cat</button>
+        </div>
+      </div>
+
+      <div class="pv-field">
+        <label for="pv-name">Pet name</label>
+        <input type="text" id="pv-name" data-pv="name" placeholder="Rex" />
+      </div>
+
+      <div class="pv-field">
+        <label for="pv-breed">Breed or mix</label>
+        <input type="text" id="pv-breed" data-pv="breed" placeholder="Labrador Retriever" />
+      </div>
+
+      <div class="pv-field">
+        <label>Age &amp; weight</label>
+        <div class="pv-subrow">
+          <input type="number" data-pv="age" placeholder="Age (yrs)" min="0" />
+          <input type="number" data-pv="weight" placeholder="Weight (kg)" min="0" />
+        </div>
+      </div>
+
+      <div class="pv-field">
+        <label>Daily activity level</label>
+        <div class="pv-segmented" data-pv="activity-group">
+          <button type="button" class="pv-segment" data-pv="activity" data-val="low">Low</button>
+          <button type="button" class="pv-segment" data-pv="activity" data-val="moderate">Moderate</button>
+          <button type="button" class="pv-segment" data-pv="activity" data-val="high">High</button>
+        </div>
+      </div>
+
+      <div class="pv-field">
+        <label>Average sleep per day</label>
+        <div class="pv-slider-wrap">
+          <div class="pv-slider-value"><span data-pv="sleep-val">12</span>h</div>
+          <input type="range" data-pv="sleep" min="6" max="20" value="12" />
+        </div>
+      </div>
+
+      <div class="pv-field" style="grid-column:1 / -1;">
+        <label>Health goals to track</label>
+        <div class="pv-chip-grid" data-pv="goals-group">
+          <button type="button" class="pv-chip" data-pv="goal" data-val="weight">Weight management</button>
+          <button type="button" class="pv-chip" data-pv="goal" data-val="joint">Joint health</button>
+          <button type="button" class="pv-chip" data-pv="goal" data-val="anxiety">Anxiety &amp; stress</button>
+          <button type="button" class="pv-chip" data-pv="goal" data-val="longevity">Longevity</button>
+          <button type="button" class="pv-chip" data-pv="goal" data-val="digestion">Digestion</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="pv-footer">
+    <button type="button" class="pv-pill-btn" data-pv="submit">Build baseline</button>
+    <div class="pv-result" data-pv="result">
+      <div class="pv-result-ring-wrap">
+        <svg viewBox="0 0 56 56">
+          <circle class="pv-result-ring-bg" cx="28" cy="28" r="24"></circle>
+          <circle class="pv-result-ring-fg" data-pv="result-ring" cx="28" cy="28" r="24" stroke-dasharray="150.8" stroke-dashoffset="150.8"></circle>
+        </svg>
+        <div class="pv-result-num" data-pv="result-num">0</div>
+      </div>
+      <div class="pv-result-text">
+        <span class="pv-result-label">Vitality score</span>
+        <span class="pv-result-sub" data-pv="result-sub"></span>
+      </div>
+    </div>
+  </div>
+</section>
+`;
+
+function initPetVitalsWidget(root){
+  if(!root) return;
+
+  var q = function(sel){ return root.querySelector(sel); };
+  var qa = function(sel){ return Array.prototype.slice.call(root.querySelectorAll(sel)); };
+
+  var DOG_SVG = '<svg viewBox="0 0 220 110" xmlns="http://www.w3.org/2000/svg">' +
+    '<ellipse cx="110" cy="100" rx="80" ry="7" fill="#000000" opacity="0.15"/>' +
+    '<path d="M30 95 L30 55 Q30 40 48 38 L60 20 Q66 12 72 20 L78 36 Q100 32 115 42 Q140 40 155 60 Q168 60 172 75 L172 95 Z" fill="#006eff" fill-opacity="0.4"/>' +
+    '<path d="M30 55 L30 95 L45 95 L45 60 Z" fill="#006eff" fill-opacity="0.4"/>' +
+    '<rect x="35" y="88" width="10" height="14" fill="#006eff" fill-opacity="0.4"/>' +
+    '<rect x="150" y="88" width="10" height="14" fill="#006eff" fill-opacity="0.4"/>' +
+    '<path d="M172 75 Q188 68 190 78 Q188 86 172 84 Z" fill="#006eff" fill-opacity="0.4"/>' +
+    '<circle cx="66" cy="34" r="3" fill="#000000"/><circle cx="52" cy="42" r="2.4" fill="#000000"/></svg>';
+
+  var CAT_SVG = '<svg viewBox="0 0 200 110" xmlns="http://www.w3.org/2000/svg">' +
+    '<ellipse cx="100" cy="98" rx="72" ry="7" fill="#000000" opacity="0.15"/>' +
+    '<path d="M35 92 L35 55 Q35 35 55 32 L52 16 L64 30 Q75 26 85 30 L96 16 L94 32 Q118 34 122 55 L122 92 Z" fill="#006eff" fill-opacity="0.4"/>' +
+    '<path d="M122 60 Q150 40 152 65 Q150 78 128 74 Z" fill="#006eff" fill-opacity="0.4"/>' +
+    '<rect x="40" y="86" width="9" height="12" fill="#006eff" fill-opacity="0.4"/>' +
+    '<rect x="108" y="86" width="9" height="12" fill="#006eff" fill-opacity="0.4"/>' +
+    '<circle cx="66" cy="42" r="2.6" fill="#000000"/><circle cx="84" cy="42" r="2.6" fill="#000000"/>' +
+    '<path d="M73 48 L79 48 L76 52 Z" fill="#000000"/></svg>';
+
+  var CAR_SVG = '<svg viewBox="0 0 240 100" xmlns="http://www.w3.org/2000/svg">' +
+    '<ellipse cx="120" cy="88" rx="95" ry="7" fill="#000000" opacity="0.15"/>' +
+    '<path d="M20 70 Q25 40 55 38 L85 38 Q95 20 130 20 L165 20 Q185 20 195 38 L215 40 Q225 45 225 60 L225 72 L20 72 Z" fill="#006eff" fill-opacity="0.4"/>' +
+    '<path d="M95 38 L120 38 L120 22 Q100 24 95 38 Z" fill="#fff8f1"/>' +
+    '<path d="M125 38 L160 38 L155 22 L133 22 Z" fill="#fff8f1"/>' +
+    '<circle cx="65" cy="75" r="14" fill="#000000"/><circle cx="65" cy="75" r="5" fill="#fff8f1"/>' +
+    '<circle cx="180" cy="75" r="14" fill="#000000"/><circle cx="180" cy="75" r="5" fill="#fff8f1"/>' +
+    '<rect x="20" y="68" width="205" height="4" fill="#000000"/></svg>';
+
+  var headerIllos = q('[data-pv="header-illos"]');
+  if(headerIllos){ headerIllos.innerHTML = DOG_SVG + CAR_SVG + CAT_SVG; }
+  var dogSlot = q('[data-pv="icon-dog-slot"]');
+  var catSlot = q('[data-pv="icon-cat-slot"]');
+  if(dogSlot) dogSlot.innerHTML = DOG_SVG;
+  if(catSlot) catSlot.innerHTML = CAT_SVG;
+
+  var pvState = { petType:null, name:'', breed:'', age:'', weight:'', activity:null, sleep:12, goals:[] };
+
+  var typeDogBtn = q('[data-pv="type-dog"]');
+  var typeCatBtn = q('[data-pv="type-cat"]');
+  function selectType(val, btn){
+    pvState.petType = val;
+    [typeDogBtn, typeCatBtn].forEach(function(b){ b.classList.remove('pv-selected'); });
+    btn.classList.add('pv-selected');
+    updateProgress();
+  }
+  if(typeDogBtn) typeDogBtn.addEventListener('click', function(){ selectType('dog', typeDogBtn); });
+  if(typeCatBtn) typeCatBtn.addEventListener('click', function(){ selectType('cat', typeCatBtn); });
+
+  qa('[data-pv="activity"]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      qa('[data-pv="activity"]').forEach(function(b){ b.classList.remove('pv-selected'); });
+      btn.classList.add('pv-selected');
+      pvState.activity = btn.getAttribute('data-val');
+      updateProgress();
+    });
+  });
+
+  qa('[data-pv="goal"]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      btn.classList.toggle('pv-selected');
+      var val = btn.getAttribute('data-val');
+      var idx = pvState.goals.indexOf(val);
+      if(idx>-1) pvState.goals.splice(idx,1); else pvState.goals.push(val);
+      updateProgress();
+    });
+  });
+
+  var sleepInput = q('[data-pv="sleep"]');
+  var sleepValEl = q('[data-pv="sleep-val"]');
+  if(sleepInput){
+    sleepInput.addEventListener('input', function(){
+      pvState.sleep = Number(sleepInput.value);
+      if(sleepValEl) sleepValEl.textContent = sleepInput.value;
+      updateProgress();
+    });
+  }
+
+  var nameInput = q('[data-pv="name"]');
+  var breedInput = q('[data-pv="breed"]');
+  var ageInput = q('[data-pv="age"]');
+  var weightInput = q('[data-pv="weight"]');
+  [nameInput, breedInput, ageInput, weightInput].forEach(function(el){
+    if(!el) return;
+    el.addEventListener('input', function(){
+      pvState.name = nameInput ? nameInput.value.trim() : '';
+      pvState.breed = breedInput ? breedInput.value.trim() : '';
+      pvState.age = ageInput ? ageInput.value : '';
+      pvState.weight = weightInput ? weightInput.value : '';
+      updateProgress();
+    });
+  });
+
+  var navRing = q('[data-pv="nav-ring"]');
+  var ringLabel = q('[data-pv="ring-label"]');
+  var RING_CIRC = 62.8;
+  function updateProgress(){
+    var total = 6;
+    var done = 0;
+    if(pvState.petType) done++;
+    if(pvState.name) done++;
+    if(pvState.breed) done++;
+    if(pvState.age && pvState.weight) done++;
+    if(pvState.activity) done++;
+    if(pvState.goals.length) done++;
+    var pct = done/total;
+    if(navRing) navRing.style.strokeDashoffset = RING_CIRC*(1-pct);
+    if(ringLabel) ringLabel.textContent = Math.round(pct*100)+'% complete';
+  }
+
+  function pulse(el){
+    if(!el) return;
+    el.style.opacity = 0.4;
+    setTimeout(function(){ el.style.opacity = 1; }, 150);
+  }
+
+  function computeScore(){
+    var score = 50;
+    if(pvState.activity==='low') score += 6;
+    if(pvState.activity==='moderate') score += 16;
+    if(pvState.activity==='high') score += 24;
+    score += Math.max(0, 10 - Math.abs(pvState.sleep-13));
+    score += pvState.goals.length*3;
+    return Math.max(40, Math.min(98, Math.round(score)));
+  }
+
+  var submitBtn = q('[data-pv="submit"]');
+  var resultBox = q('[data-pv="result"]');
+  var resultRing = q('[data-pv="result-ring"]');
+  var resultNum = q('[data-pv="result-num"]');
+  var resultSub = q('[data-pv="result-sub"]');
+  var RESULT_CIRC = 150.8;
+
+  if(submitBtn){
+    submitBtn.addEventListener('click', function(){
+      if(!pvState.petType){ pulse(q('.pv-toggle-row')); return; }
+      if(!pvState.activity){ pulse(q('[data-pv="activity-group"]')); return; }
+
+      var score = computeScore();
+      if(resultRing){
+        resultRing.style.strokeDashoffset = RESULT_CIRC;
+        requestAnimationFrame(function(){
+          resultRing.style.strokeDashoffset = RESULT_CIRC*(1-score/100);
+        });
+      }
+      var n = 0;
+      var step = Math.max(1, Math.round(score/20));
+      var timer = setInterval(function(){
+        n += step;
+        if(n>=score){ n = score; clearInterval(timer); }
+        if(resultNum) resultNum.textContent = n;
+      }, 20);
+      if(resultSub){
+        resultSub.textContent = (pvState.name||'Your pet') + "'s baseline is set - we'll track recovery, strain, and sleep from here.";
+      }
+      if(resultBox) resultBox.classList.add('pv-show');
+    });
+  }
+
+  updateProgress();
+}
+
+/* Additive only - separate listeners on the widget's own elements, feeding
+   the real app state (species/name/breed/weight/age) so the rest of the
+   flow (BCS chart, Part 1-4, results, completion page) keeps working. Does
+   not read from or modify any of the widget's own variables/listeners above. */
+function wirePetVitalsToState(root){
+  const b = state.baseline;
+
+  const typeDog = root.querySelector('[data-pv="type-dog"]');
+  const typeCat = root.querySelector('[data-pv="type-cat"]');
+  if (typeDog) typeDog.addEventListener("click", ()=>{ b.species = "dog"; });
+  if (typeCat) typeCat.addEventListener("click", ()=>{ b.species = "cat"; });
+
+  const nameEl = root.querySelector('[data-pv="name"]');
+  if (nameEl) nameEl.addEventListener("input", e=>{ b.name = e.target.value.trim(); });
+  const breedEl = root.querySelector('[data-pv="breed"]');
+  if (breedEl) breedEl.addEventListener("input", e=>{ b.breed = e.target.value.trim(); });
+
+  // The widget captures a single "Age (yrs)" number, not a date of birth -
+  // treated as the same low-confidence years-only signal the old DOB-unknown
+  // path used, fed through the same fuseAge() pipeline unchanged.
+  const ageEl = root.querySelector('[data-pv="age"]');
+  if (ageEl) ageEl.addEventListener("input", e=>{
+    b.dobKnown = false;
+    b.yearsOnlyAge = e.target.value;
+  });
+
+  // No unit toggle in this widget - weight is kg-only here.
+  const weightEl = root.querySelector('[data-pv="weight"]');
+  if (weightEl) weightEl.addEventListener("input", e=>{
+    b.weightValue = parseFloat(e.target.value) || 0;
+    b.weightUnit = "kg";
+  });
+
+  // Prefills Part 1's activity-minutes question from the chosen level so it
+  // isn't asked twice - editable there if the owner wants to refine it.
+  const ACTIVITY_LEVEL_MINUTES = {low:15, moderate:35, high:60};
+  root.querySelectorAll('[data-pv="activity"]').forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const minutes = ACTIVITY_LEVEL_MINUTES[btn.getAttribute("data-val")];
+      state.raw = state.raw || {};
+      state.raw.p1_activity = minutes;
+      state.answers.p1_activity = scoreActivityMinutes(b.species, minutes, weightKg(), b.breed);
+    });
+  });
+
+  // Captured for display/future use - no existing scoring dimension for
+  // sleep duration or stated health goals yet, so these don't feed the FI.
+  root.querySelectorAll('[data-pv="goal"]').forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const val = btn.getAttribute("data-val");
+      const idx = b.healthGoals.indexOf(val);
+      if (idx > -1) b.healthGoals.splice(idx,1); else b.healthGoals.push(val);
+    });
+  });
+  const sleepEl = root.querySelector('[data-pv="sleep"]');
+  if (sleepEl) sleepEl.addEventListener("input", e=>{ b.sleepHours = Number(e.target.value); });
 }
 
 function renderBaseline(){
-  const b = state.baseline;
-  const currentYear = new Date().getFullYear();
-  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const monthOptions = `<option value="">Month</option>` + monthNames
-    .map((m,i)=>`<option value="${i+1}" ${String(b.dobMonth)===String(i+1)?'selected':''}>${m}</option>`).join("");
-
-  app.innerHTML = `
-    <header class="top"><div class="logo">🐾 Pawl</div></header>
-    ${progressHTML(0)}
-    <h1>Let's see how spry ${b.name || "your pet"} really is.</h1>
-    <p class="lead">90 seconds, a few quick observations, and you'll get a vitality estimate - not a diagnosis.</p>
-    <div class="card">
-      <div class="species-toggle">
-        <div class="opt ${b.species==='dog'?'sel':''}" data-species="dog">🐶 Dog</div>
-        <div class="opt ${b.species==='cat'?'sel':''}" data-species="cat">🐱 Cat</div>
-      </div>
-      <div class="q"><label class="qtext">Name</label>
-        <input type="text" id="f-name" value="${b.name}" placeholder="Bella"></div>
-      <div class="q"><label class="qtext">Breed (or best guess)</label>
-        <input type="text" id="f-breed" value="${b.breed}" placeholder="Labrador mix"></div>
-      <div class="row2">
-        <div class="q"><label class="qtext">Adult weight</label>
-          <div class="weight-row">
-            <input type="number" id="f-weight" value="${b.weightValue}" min="0.2" step="0.1">
-            <div class="unit-toggle">
-              <div class="opt ${b.weightUnit==='kg'?'sel':''}" data-unit="kg">kg</div>
-              <div class="opt ${b.weightUnit==='lb'?'sel':''}" data-unit="lb">lb</div>
-            </div>
-          </div>
-        </div>
-        <div class="q"><label class="qtext">Sex & neuter status</label>
-          <select id="f-sex">
-            <option value="male-intact" ${b.sexNeuter==='male-intact'?'selected':''}>Male, intact</option>
-            <option value="male-neutered" ${b.sexNeuter==='male-neutered'?'selected':''}>Male, neutered</option>
-            <option value="female-intact" ${b.sexNeuter==='female-intact'?'selected':''}>Female, intact</option>
-            <option value="female-spayed" ${b.sexNeuter==='female-spayed'?'selected':''}>Female, spayed</option>
-          </select></div>
-      </div>
-      <div class="q">
-        <label class="qtext">Date of birth</label>
-        <div class="unknown-toggle">
-          <label><input type="checkbox" id="f-dob-unknown" ${b.dobKnown?'':'checked'}> I don't know the exact date</label>
-        </div>
-        ${b.dobKnown ? `
-        <div class="dob-row">
-          <select id="f-dob-month">${monthOptions}</select>
-          <input type="number" id="f-dob-day" placeholder="Day" min="1" max="31" value="${b.dobDay}">
-          <input type="number" id="f-dob-year" placeholder="Year" min="${currentYear-30}" max="${currentYear}" value="${b.dobYear}">
-        </div>` : `
-        <div class="q" style="margin-top:10px;margin-bottom:0;">
-          <label class="qtext">Best guess - age in years</label>
-          <input type="number" id="f-years-only" min="0" step="0.5" value="${b.yearsOnlyAge}" placeholder="e.g. 6">
-          <div class="hint">Rough is fine - a photo below, plus your answers, help sharpen it.</div>
-        </div>`}
-      </div>
-      <div class="q" style="margin-bottom:0;">
-        <label class="qtext">Photo (optional)</label>
-        <div class="hint">Helps refine the age estimate - combined with the info above, never used alone.</div>
-        <input type="file" id="f-photo" accept="image/*">
-        <div class="photo-status">${photoStatusLine(b)}</div>
-      </div>
+  app.innerHTML = PV_WIDGET_HTML + `
+    <div style="max-width:960px;margin:16px auto 0;">
+      <button type="button" class="pv-pill-btn" id="pv-continue">Continue to body condition check</button>
     </div>
-    <button class="primary" id="next-baseline">Start the vitality check →</button>
   `;
+  const pvRoot = app.querySelector(".pv-root");
+  initPetVitalsWidget(pvRoot);
+  wirePetVitalsToState(pvRoot);
 
-  document.querySelectorAll("[data-species]").forEach(el=>el.onclick=()=>{
-    state.baseline.species = el.dataset.species; render();
-  });
-  document.getElementById("f-name").oninput = e=> state.baseline.name = e.target.value;
-  document.getElementById("f-breed").oninput = e=> state.baseline.breed = e.target.value;
-  document.getElementById("f-weight").oninput = e=> state.baseline.weightValue = parseFloat(e.target.value)||0;
-  document.querySelectorAll("[data-unit]").forEach(el=>el.onclick=()=>{
-    state.baseline.weightUnit = el.dataset.unit; render();
-  });
-  document.getElementById("f-sex").onchange = e=> state.baseline.sexNeuter = e.target.value;
-  document.getElementById("f-dob-unknown").onchange = e=>{ state.baseline.dobKnown = !e.target.checked; render(); };
-
-  const monthEl = document.getElementById("f-dob-month");
-  if (monthEl) monthEl.onchange = e=> state.baseline.dobMonth = e.target.value;
-  const dayEl = document.getElementById("f-dob-day");
-  if (dayEl) dayEl.oninput = e=> state.baseline.dobDay = e.target.value;
-  const yearEl = document.getElementById("f-dob-year");
-  if (yearEl) yearEl.oninput = e=> state.baseline.dobYear = e.target.value;
-  const yearsOnlyEl = document.getElementById("f-years-only");
-  if (yearsOnlyEl) yearsOnlyEl.oninput = e=> state.baseline.yearsOnlyAge = e.target.value;
-
-  document.getElementById("f-photo").onchange = async e=>{
-    const file = e.target.files[0];
-    if (!file) return;
-    state.baseline.photoFile = file;
-    state.baseline.photoEstimate = {status:"checking", years:null, confidence:0};
-    render();
-    const result = await PawlAgeEstimator.estimateAgeFromPhoto(file, {species: state.baseline.species});
-    state.baseline.photoEstimate = result;
-    render();
-  };
-
-  document.getElementById("next-baseline").onclick = ()=>{
-    // A photo was provided - skip the manual body-condition step. BCS then
-    // stays at its default (5, ideal) and p1_bcs is never scored, same
-    // "skipped items don't count" rule already used elsewhere in the flow.
-    state.step = b.photoFile ? "part1" : "bcs";
-    render();
-  };
+  document.getElementById("pv-continue").onclick = ()=>{ state.step = "bcs"; render(); };
 }
 
 function renderBCS(){
   const b = state.baseline;
   const chart = BCS_CHART[b.species];
   const cur = chart.find(c=>c.bcs===b.bcs) || chart[4];
-  app.innerHTML = `
-    <header class="top"><div class="logo">🐾 Pawl</div></header>
-    ${progressHTML(0)}
-    <h1>How's ${b.name || "your pet"}'s body condition?</h1>
-    <p class="lead">Compare against the chart below - ribs, waist, and profile are the tells, not the scale.</p>
-    <div class="card">
-      <div class="bcs-chart-preview" data-img-hook="${cur.imageHook}">
-        <img class="bcs-chart-thumb" id="bcs-chart-thumb" src="${BCS_REFERENCE_CHARTS[b.species]}" alt="${b.species} body condition reference chart">
-        <div><a class="chart-btn" href="${BCS_REFERENCE_CHARTS[b.species]}" target="_blank" rel="noopener">View full-size chart ↗</a></div>
-      </div>
-      <div class="q" style="margin-top:16px;margin-bottom:0;">
-        <input type="range" id="f-bcs" min="1" max="9" step="1" value="${b.bcs}">
-        <div class="bcs-scale"><span>1 · too thin</span><span>5 · ideal</span><span>9 · obese</span></div>
-      </div>
-      <div class="bcs-readout">
-        <strong>${b.bcs} - ${cur.label}</strong>
-        <p>${cur.desc}</p>
-      </div>
+  const name = b.name || "your pet";
+  const body = `
+    <p class="pv-eyebrow">A Whoop for the whole household</p>
+    <h2 class="pv-headline">How's ${name}'s body condition?</h2>
+    <p class="pv-hint">Compare against the chart below - ribs, waist, and profile are the tells, not the scale.</p>
+    <div class="pv-card pv-card-center" data-img-hook="${cur.imageHook}">
+      <img class="bcs-chart-thumb" id="bcs-chart-thumb" src="${BCS_REFERENCE_CHARTS[b.species]}" alt="${b.species} body condition reference chart" style="max-width:100%;max-height:160px;border-radius:10px;cursor:pointer;">
+      <div style="margin-top:8px;"><a class="pv-pill-btn pv-small" style="display:inline-block;text-decoration:none;" href="${BCS_REFERENCE_CHARTS[b.species]}" target="_blank" rel="noopener">View full-size chart</a></div>
     </div>
-    <button class="primary" id="next-bcs">Continue →</button>
+    <div class="pv-field" style="margin-top:16px;">
+      <input type="range" id="f-bcs" min="1" max="9" step="1" value="${b.bcs}">
+      <div class="pv-scale-labels"><span>1 - too thin</span><span>5 - ideal</span><span>9 - obese</span></div>
+    </div>
+    <div class="pv-card pv-card-center">
+      <div class="pv-slider-value" style="font-size:22px;">${b.bcs} - ${cur.label}</div>
+      <p class="pv-hint" style="margin-top:6px;">${cur.desc}</p>
+    </div>
   `;
+  const footer = `<button type="button" class="pv-pill-btn" id="next-bcs">Continue</button>`;
+  app.innerHTML = pvShell("Body Condition", "bcs", body, footer);
+
   document.getElementById("f-bcs").oninput = e=>{
     state.baseline.bcs = parseInt(e.target.value);
     state.answers.p1_bcs = bcsToDeficit(state.baseline.bcs);
@@ -508,18 +898,19 @@ const PART_META = {
 
 function renderPart(key){
   const meta = PART_META[key];
-  app.innerHTML = `
-    <header class="top"><div class="logo">🐾 Pawl</div></header>
-    ${progressHTML(meta.idx)}
-    <h1>${meta.title}</h1>
-    <p class="lead">${meta.num===1 ? "Answer what you can - skip anything you're unsure of." : "Every extra answer sharpens the estimate."}</p>
-    <div class="card">
+  const body = `
+    <p class="pv-eyebrow">A Whoop for the whole household</p>
+    <h2 class="pv-headline">${meta.title}</h2>
+    <p class="pv-hint">${meta.num===1 ? "Answer what you can - skip anything you're unsure of." : "Every extra answer sharpens the estimate."}</p>
+    <div class="pv-grid">
       ${meta.items.map(q => questionBlock(q, q.opts)).join("")}
     </div>
-    <button class="primary" id="next-part">See ${meta.num===1?"my estimate":"the sharpened estimate"} →</button>
   `;
-  app.querySelectorAll(".opts").forEach(row=>{
-    row.querySelectorAll(".opt").forEach(o=>{
+  const footer = `<button type="button" class="pv-pill-btn" id="next-part">See ${meta.num===1?"my estimate":"the sharpened estimate"}</button>`;
+  app.innerHTML = pvShell(meta.title, key, body, footer);
+
+  app.querySelectorAll(".pv-segmented").forEach(row=>{
+    row.querySelectorAll(".pv-segment").forEach(o=>{
       o.onclick = ()=>{
         state.answers[row.dataset.qid] = parseFloat(o.dataset.val);
         render();
@@ -645,67 +1036,66 @@ function renderResult(partNumber){
   const stageText = stageLabelText(r.stageDisplay, r.species);
   const { watch, help } = personalizedInsights(r);
   const ringColor = scoreRingColor(r.score);
+  const scoreOffset = 150.8 * (1 - r.score/100);
   // Uncertainty is reflected in tone, not a raw confidence percentage.
-  const ageSoftener = r.ageConfidence >= 0.9 ? "" : `<div class="stat-note">Estimated - sharpens as you answer more</div>`;
+  const ageSoftener = r.ageConfidence >= 0.9 ? "" : `<div class="pv-stat-note">Estimated - sharpens as you answer more</div>`;
 
-  app.innerHTML = `
-    <header class="top"><div class="logo">🐾 Pawl</div></header>
-    ${progressHTML(Math.min(partNumber,3))}
-    ${r.zone.vet ? `<div class="vet-banner">💬 ${name}'s answers suggest it's worth a check-in with your vet soon. This isn't a diagnosis - just a nudge to get eyes on it.</div>` : ""}
-    <div class="result">
-      <div class="stage-pill">${STAGE_ICON[r.stageDisplay]} ${stageText} stage</div>
-      <h1 class="result-headline">${name} is in the ${stageText} stage</h1>
-      <p class="stage-explain">${STAGE_EXPLAIN[r.stageDisplay]}</p>
+  const body = `
+    ${r.zone.vet ? `<div class="pv-warn-banner">${name}'s answers suggest it's worth a check-in with your vet soon. This isn't a diagnosis - just a nudge to get eyes on it.</div>` : ""}
+    <div class="pv-badge">${STAGE_ICON[r.stageDisplay]} ${stageText} stage</div>
+    <h2 class="pv-headline">${name} is in the ${stageText} stage</h2>
+    <p class="pv-hint" style="max-width:440px;">${STAGE_EXPLAIN[r.stageDisplay]}</p>
 
-      <div class="stats-row">
-        <div class="stat-block">
-          <div class="stat-label">Pet Age</div>
-          <div class="stat-value">${ageDisplay.value}<span class="unit">${ageDisplay.unit}</span></div>
-          ${ageSoftener}
-        </div>
-        ${r.humanEq ? `
-        <div class="stat-block">
-          <div class="stat-label">Human Age</div>
-          <div class="stat-value">${r.humanEq}<span class="unit"> yrs</span></div>
-          <div class="stat-note">What a human would be at the same biological stage - not ${name}'s real age</div>
-        </div>` : ""}
+    <div class="pv-stat-row">
+      <div class="pv-stat-block">
+        <div class="pv-stat-label">Pet Age</div>
+        <div class="pv-stat-value">${ageDisplay.value}<span class="pv-unit">${ageDisplay.unit}</span></div>
+        ${ageSoftener}
       </div>
-
-      <div class="health-score-card">
-        <div class="score-ring" style="--pct:${r.score};--ring-color:${ringColor}">
-          <div class="score-ring-inner">${r.score}</div>
-        </div>
-        <div class="score-meta">
-          <div class="score-title">Health Score</div>
-          <div class="score-zone">${r.zone.label}</div>
-          <div class="score-caption">${deltaCopy(r.delta, r.chronAge, r.deltaCategory)}</div>
-        </div>
-      </div>
-      ${r.species==="cat" ? `<div class="feline-note">Feline estimate - the science here is still maturing, so this reads a touch less precise.</div>` : ""}
+      ${r.humanEq ? `
+      <div class="pv-stat-block">
+        <div class="pv-stat-label">Human Age</div>
+        <div class="pv-stat-value">${r.humanEq}<span class="pv-unit"> yrs</span></div>
+        <div class="pv-stat-note">What a human would be at the same biological stage - not ${name}'s real age</div>
+      </div>` : ""}
     </div>
 
-    <div class="card insight-card">
-      <div class="insight-title">⚠️ Watch out for</div>
+    <div class="pv-card">
+      <div class="pv-result">
+        <div class="pv-result-ring-wrap" style="width:72px;height:72px;">
+          <svg viewBox="0 0 56 56">
+            <circle class="pv-result-ring-bg" cx="28" cy="28" r="24"></circle>
+            <circle class="pv-result-ring-fg" cx="28" cy="28" r="24" style="stroke:${ringColor};" stroke-dasharray="150.8" stroke-dashoffset="${scoreOffset}"></circle>
+          </svg>
+          <div class="pv-result-num" style="color:${ringColor};font-size:20px;">${r.score}</div>
+        </div>
+        <div class="pv-result-text">
+          <span class="pv-result-label">Health Score</span>
+          <span class="pv-result-sub">${r.zone.label} - ${deltaCopy(r.delta, r.chronAge, r.deltaCategory)}</span>
+        </div>
+      </div>
+    </div>
+    ${r.species==="cat" ? `<p class="pv-italic-note">Feline estimate - the science here is still maturing, so this reads a touch less precise.</p>` : ""}
+
+    <div class="pv-card">
+      <div class="pv-insight-title">Watch out for</div>
       <ul>${watch.map(w=>`<li>${w}</li>`).join("")}</ul>
     </div>
-    <div class="card insight-card">
-      <div class="insight-title">✅ What helps</div>
+    <div class="pv-card">
+      <div class="pv-insight-title">What helps</div>
       <ul>${help.map(h=>`<li>${h}</li>`).join("")}</ul>
     </div>
 
-    <p class="lead" style="text-align:center;">This combines their age, body condition, and today's answers - it gets sharper with each round (${r.n} observations so far).</p>
-    ${!isLast ? `
-      <div class="cta-row">
-        <button class="primary" id="next-round">Sharpen this estimate - round ${nextPart} →</button>
-      </div>
-      <button class="ghost" id="stop-here">I'm happy with this estimate</button>
-    ` : `
-      <div class="cta-row">
-        <button class="primary" id="finish-setup">Finish setting up ${name}'s profile →</button>
-      </div>
-    `}
-    <footer class="note">Wellness estimate only. Not a diagnosis or life-expectancy prediction.</footer>
+    <p class="pv-hint">This combines their age, body condition, and today's answers - it gets sharper with each round (${r.n} observations so far).</p>
   `;
+  const footer = isLast
+    ? `<button type="button" class="pv-pill-btn" id="finish-setup">Finish setting up ${name}'s profile</button>`
+    : `
+      <button type="button" class="pv-pill-btn" id="next-round">Sharpen this estimate - round ${nextPart}</button>
+      <button type="button" class="pv-pill-btn pv-ghost" id="stop-here">I'm happy with this estimate</button>
+    `;
+  app.innerHTML = pvShell("Results", "result"+partNumber, body, footer)
+    + `<p class="pv-footnote">Wellness estimate only. Not a diagnosis or life-expectancy prediction.</p>`;
   if (!isLast){
     document.getElementById("next-round").onclick = ()=>{ state.step="part"+nextPart; render(); };
     document.getElementById("stop-here").onclick = ()=>{ state.step="complete"; render(); };
@@ -740,8 +1130,8 @@ function percentileSoftCopy(pct, species){
 
 function followupOptRow(field, opts){
   const cur = state.followup[field];
-  return `<div class="opts" data-field="${field}">` +
-    opts.map(o => `<div class="opt ${cur===o.v?'sel':''}" data-val="${o.v}">${o.label}</div>`).join("") +
+  return `<div class="pv-segmented" data-field="${field}">` +
+    opts.map(o => `<button type="button" class="pv-segment ${cur===o.v?'pv-selected':''}" data-val="${o.v}">${o.label}</button>`).join("") +
     `</div>`;
 }
 
@@ -779,49 +1169,48 @@ function renderComplete(){
       ? "A touch above typical - nothing urgent, just a signal to keep supporting them."
       : "Noticeably above typical - worth folding into your next vet conversation.";
 
-  app.innerHTML = `
-    <header class="top"><div class="logo">🐾 Pawl</div></header>
-    <div class="complete-badge">✅ Profile complete</div>
-    <h1>${name}'s profile is set up</h1>
-    <p class="lead">This is the start, not the finish - Pawl keeps refining ${name}'s picture as you add more over time. Extra assessments can be layered in later without redoing any of this.</p>
+  const body = `
+    <div class="pv-badge">Profile complete</div>
+    <h2 class="pv-headline">${name}'s profile is set up</h2>
+    <p class="pv-hint" style="max-width:520px;">This is the start, not the finish - Pawl keeps refining ${name}'s picture as you add more over time. Extra assessments can be layered in later without redoing any of this.</p>
 
-    <div class="result multiplier-card">
-      <div class="stat-label">Health Multiplier</div>
-      <div class="multiplier-value">${r.multiplier.toFixed(2)}x</div>
-      <p class="multiplier-explain">This compares ${name}'s current signals to what's typical for their age - 1.0x is the neutral baseline. It's a wellness and longevity-potential signal, not a lifespan guarantee.</p>
-      <div class="multiplier-tone">${multiplierTone}</div>
+    <div class="pv-card pv-card-center">
+      <div class="pv-stat-label">Health Multiplier</div>
+      <div class="pv-stat-value" style="font-size:44px;">${r.multiplier.toFixed(2)}x</div>
+      <p class="pv-hint" style="max-width:440px;margin:6px auto 10px;">This compares ${name}'s current signals to what's typical for their age - 1.0x is the neutral baseline. It's a wellness and longevity-potential signal, not a lifespan guarantee.</p>
+      <div class="pv-tone">${multiplierTone}</div>
     </div>
 
-    <div class="card">
-      <div class="section-title">Body condition</div>
-      <p class="bcs-summary"><strong>${b.bcs} - ${bcsEntry.label}</strong></p>
-      <p class="bcs-desc">${bcsEntry.desc}</p>
-      ${r.overweightPct != null ? `<p class="soft-percentile">${percentileSoftCopy(r.overweightPct, b.species)}</p>` : ""}
-      <p class="hint" style="margin-top:10px;margin-bottom:0;">Body condition is its own signal - related to the health multiplier above, but not the same thing as their age or life stage.</p>
+    <div class="pv-card">
+      <div class="pv-insight-title">Body condition</div>
+      <p class="pv-slider-value" style="font-size:18px;margin:0 0 4px;">${b.bcs} - ${bcsEntry.label}</p>
+      <p class="pv-hint" style="margin:0;">${bcsEntry.desc}</p>
+      ${r.overweightPct != null ? `<p class="pv-hint" style="margin-top:10px;">${percentileSoftCopy(r.overweightPct, b.species)}</p>` : ""}
+      <p class="pv-hint" style="margin-top:10px;margin-bottom:0;">Body condition is its own signal - related to the health multiplier above, but not the same thing as their age or life stage.</p>
     </div>
 
-    <div class="card">
-      <div class="section-title">Wearable connection</div>
-      <p class="hint">Optional. Connecting a wearable lets Pawl use real activity data instead of estimates, sharpening the health multiplier and food/activity balance over time.</p>
-      <button class="ghost" id="connect-wearable">Connect a wearable</button>
-      <div class="hint" id="wearable-status" style="margin-top:8px;"></div>
+    <div class="pv-card">
+      <div class="pv-insight-title">Wearable connection</div>
+      <p class="pv-hint">Optional. Connecting a wearable lets Pawl use real activity data instead of estimates, sharpening the health multiplier and food/activity balance over time.</p>
+      <button type="button" class="pv-pill-btn pv-ghost pv-small" id="connect-wearable">Connect a wearable</button>
+      <p class="pv-hint" id="wearable-status" style="margin-top:8px;"></p>
     </div>
 
-    <div class="card">
-      <div class="section-title">Activity & food</div>
-      <div class="row2">
-        <div class="q">
-          <label class="qtext">Exercise (min/day)</label>
+    <div class="pv-card">
+      <div class="pv-insight-title">Activity &amp; food</div>
+      <div class="pv-subrow">
+        <div class="pv-field">
+          <label>Exercise (min/day)</label>
           <input type="number" id="f-exercise" min="0" step="5" value="${f.exerciseMinutes}">
         </div>
-        <div class="q">
-          <label class="qtext">Meals per day</label>
+        <div class="pv-field">
+          <label>Meals per day</label>
           <input type="number" id="f-meals" min="1" step="1" value="${f.mealsPerDay}">
         </div>
       </div>
-      <div class="q">
-        <label class="qtext">What do they eat?</label>
-        <select id="f-food-type">
+      <div class="pv-field">
+        <label>What do they eat?</label>
+        <select id="f-food-type" style="border:none;border-bottom:1.5px solid var(--pv-ash);background:transparent;font-family:var(--pv-font-display);font-size:18px;padding:6px 0;color:var(--pv-ink);">
           <option value="">Pick one</option>
           <option value="kibble" ${f.foodType==='kibble'?'selected':''}>Dry kibble</option>
           <option value="wet" ${f.foodType==='wet'?'selected':''}>Wet food</option>
@@ -830,34 +1219,35 @@ function renderComplete(){
           <option value="mixed" ${f.foodType==='mixed'?'selected':''}>Mixed</option>
         </select>
       </div>
-      <div class="q">
-        <label class="qtext">Portion size vs. what's recommended</label>
+      <div class="pv-field">
+        <label>Portion size vs. what's recommended</label>
         ${followupOptRow("portionScore", [{v:0,label:"About right"},{v:0.5,label:"A bit more"},{v:1,label:"A lot more"}])}
       </div>
-      <div class="q" style="margin-bottom:0;">
-        <label class="qtext">Treats & extras</label>
+      <div class="pv-field" style="margin-bottom:0;">
+        <label>Treats &amp; extras</label>
         ${followupOptRow("treatsScore", [{v:0,label:"Rarely"},{v:0.5,label:"Sometimes"},{v:1,label:"Often"}])}
       </div>
-      <div class="balance-summary">
-        <div class="balance-label">Food & activity balance</div>
-        <div class="balance-bar"><div class="balance-fill" id="balance-fill" style="width:${balance ?? 0}%"></div></div>
-        <div class="balance-copy" id="balance-copy">${balanceCopy(balance)}</div>
+      <div class="pv-divider">
+        <div class="pv-insight-title" style="font-size:13px;text-transform:uppercase;color:var(--pv-blue);">Food &amp; activity balance</div>
+        <div class="pv-bar"><div class="pv-bar-fill" id="balance-fill" style="width:${balance ?? 0}%"></div></div>
+        <div class="pv-bar-copy" id="balance-copy">${balanceCopy(balance)}</div>
       </div>
-      <div class="food-equation">
-        <div class="balance-label">Food equation</div>
-        <div class="balance-copy" id="food-equation-copy">${foodEquationCopy(balance, b.species)}</div>
+      <div class="pv-divider">
+        <div class="pv-insight-title" style="font-size:13px;text-transform:uppercase;color:var(--pv-blue);">Food equation</div>
+        <div class="pv-bar-copy" id="food-equation-copy">${foodEquationCopy(balance, b.species)}</div>
       </div>
     </div>
 
-    <p class="lead" style="text-align:center;">Let's keep setting this up over time - extra assessments can be added later without redoing this setup.</p>
-    <footer class="note">Wellness estimate only. Not a diagnosis or life-expectancy prediction.</footer>
+    <p class="pv-hint">Let's keep setting this up over time - extra assessments can be added later without redoing this setup.</p>
   `;
+  app.innerHTML = pvShell("Profile", "complete", body, "")
+    + `<p class="pv-footnote">Wellness estimate only. Not a diagnosis or life-expectancy prediction.</p>`;
 
   document.getElementById("f-exercise").oninput = e=>{ state.followup.exerciseMinutes = e.target.value; updateBalanceUI(); };
   document.getElementById("f-meals").oninput = e=>{ state.followup.mealsPerDay = e.target.value; };
   document.getElementById("f-food-type").onchange = e=>{ state.followup.foodType = e.target.value; };
-  app.querySelectorAll(".opts[data-field]").forEach(row=>{
-    row.querySelectorAll(".opt").forEach(o=>{
+  app.querySelectorAll(".pv-segmented[data-field]").forEach(row=>{
+    row.querySelectorAll(".pv-segment").forEach(o=>{
       o.onclick = ()=>{ state.followup[row.dataset.field] = parseFloat(o.dataset.val); render(); };
     });
   });

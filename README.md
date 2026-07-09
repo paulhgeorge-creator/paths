@@ -31,7 +31,16 @@ Species: dog and cat share one shell. Species-specific items (e.g. stairs vs. ju
 
 ## Onboarding flow & age fusion
 
-Baseline collects: species, name, breed, weight (kg or lb - stored canonically in kg, `KG_PER_LB` conversion, display-only toggle), sex/neuter status, date of birth as three separate month/day/year fields (no more one `<input type=date>`), and an optional photo. If DOB is unknown, a plain "age in years" number field replaces it - no lifecycle-labeled dropdown (puppy/young adult/adult/looks-senior) exists anymore.
+Baseline is now a provided embeddable widget ("Pet Vitals Survey", `PV_WIDGET_HTML`/`initPetVitalsWidget()` in `index.html`), kept intact byte-for-byte (2 approved text-only fixes: em dash and curly quotes, to match the project's house style) - its own scoped `.pv-root` CSS, its own SVG illustrations, its own toy "vitality score" ring all work exactly as given. `wirePetVitalsToState()` is a fully separate, additive layer of listeners on the same elements that feeds the *real* app state (species/name/breed/weight/age) alongside the widget's own untouched handlers - it never reads from or modifies the widget's internal variables.
+
+**Capability trade-offs from this swap** (the widget doesn't have equivalent inputs, so these no longer have a UI path from baseline - flagging per your own "tell me and we'll find a workaround" instruction, not silently dropped):
+- **Photo-based age estimation** - `age-estimator.js`/`age-service/` still exist and still work (tested, running), just currently unreachable from any UI. No photo upload field in the widget.
+- **Exact date of birth** - the widget's single "Age (yrs)" field is wired as the same low-confidence years-only signal the old "I don't know the exact date" path used (`b.dobKnown = false; b.yearsOnlyAge = ...`), not a real DOB. Age confidence for every pet is now capped at 0.5 instead of ever reaching 1.0 from baseline.
+- **Weight units** - kg only; the widget has no kg/lb toggle.
+- **Sex/neuter status** - no field for it in the widget; was informational-only before (not part of the FI denominator), so this is a data-capture loss, not a scoring one.
+- **New, not yet wired into scoring**: daily activity level (low/moderate/high) prefills Part 1's activity-minutes question so it isn't asked twice; sleep hours and health goals are captured (`state.baseline.sleepHours`, `state.baseline.healthGoals`) but not yet used by any scoring or personalization logic - no existing FI item covers sleep *duration* (Part 2's `p2_sleep` is about sleep *changes*, a different axis) or goal-based content selection.
+
+Everything below this point (age fusion, photo estimation, BCS, activity thresholds, percentile ranking) is unchanged - only how baseline collects the raw inputs changed, not how they flow through the model.
 
 **`computeFinalAge()`** (in `index.html`) fuses whatever signals are available via `fuseAge()` (in `frailty-model.js`), a confidence-weighted average - never a single model or category deciding alone:
 
@@ -61,6 +70,10 @@ A signal with confidence 0 contributes nothing to the weighted average - this is
 ### Extensible activity-minutes thresholds
 
 `getActivityMinutesThreshold(species, weightKg, breed)` checks a breed-override table (`ACTIVITY_BREED_OVERRIDES`, sourced from general breed-energy-level characterizations) before falling back to the existing size-class default. Adding a real per-breed number later is a one-line addition to that object - no logic changes needed. Still flagged as illustrative (see Status below) - no public source gives real size/breed-stratified activity minutes.
+
+## Design system
+
+Every page (BCS, Part 1-4, results, completion) uses the same `.pv-` design language as the baseline widget (Cormorant/Inter fonts, cream/blue/ash palette, pill buttons and segmented controls, SVG ring progress indicator) via a shared `pvShell(wordmark, step, bodyHtml, footerHtml)` helper in `index.html` - each page supplies its own content, the shell supplies the consistent header/ring/footer chrome. `PV_STEP_ORDER` + `pvStepPct()` drive the ring's percentage across the whole flow (baseline has its own separate 6-field-completion ring, since that widget block is verbatim/unmodified - see below). The global CSS duplicates the widget's own scoped rules (harmless, idempotent) rather than editing `PV_WIDGET_HTML`, so that block stays byte-identical.
 
 ## Result page
 
