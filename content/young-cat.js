@@ -30,11 +30,11 @@ const questions = [
   "p2_vision", "p2_hearing", "p2_sleep", "p2_interaction", "p1_vitality",
   {id:"appetite_weight_gate", text:{both:"Any change in appetite, or weight gain from a mostly indoor/sedentary routine?"}},
   "appetite_weight_detail",
-  {id:"coat_dental_skin_gate", text:{both:"New skin-fold irritation or tear staining, or early dental tartar building up?"}},
+  {id:"coat_dental_skin_gate", text:{both:"Early dental tartar building up, or any coat/skin changes?"}},
   "coat_dental_skin_detail",
   "water_urination_continence_gate", "water_detail",
   "p3_digestion",
-  {id:"p3_breathing", text:{both:"Noisy breathing or snoring, especially in warm weather?"}},
+  "p3_breathing",
   "temperature_pain_gate", "discomfort_detail",
   "p4_diagnoses", "p4_medications", "p4_vet_visits", "p4_dental_history",
   "p4_surgical_history", "p4_bloodwork", "p4_organ_findings", "p4_owner_concern",
@@ -44,6 +44,20 @@ const watchFor = [
   "Whether a genetic test or kidney ultrasound has ever been done - worth asking your vet about now, even though symptoms themselves are rare at this age",
   "Noisy or labored breathing, snoring, or reduced heat/exercise tolerance in flat-faced breeds",
   "Litter-box habits or scratching patterns forming the wrong way early on",
+];
+
+/* Breed-conditional net-new modules - only asked for flat-faced cats
+   (Persian and similar), not every young cat. The PKD item is a
+   screening-history question (round 4, alongside the other opt-in vet-
+   history items) rather than a symptom question - matches the research
+   finding that PKD is mostly asymptomatic at this age, so asking "have you
+   screened" is the honest, actionable question here, not "any symptoms". */
+const breedConditionalQuestions = [
+  {tags:["brachycephalic"], questions:[
+    {id:"pkd_screening_history", round:4, text:{both:"Has a vet ever run a kidney ultrasound or PKD genetic test on this cat?"}, opts:[{v:0,label:"Yes, tested/screened"},{v:1,label:"No / not sure"}]},
+    {id:"facial_fold_tear_staining", round:3, text:{both:"Persistent tear staining, or irritation in facial skin folds?"}},
+    {id:"boas_noisy_breathing_cat", round:3, text:{both:"Noisy breathing or snoring, especially in warm weather?"}},
+  ]},
 ];
 
 const breedRiskNotes = [
@@ -58,6 +72,6 @@ const breedRiskNotes = [
     sourceIds:[]},
 ];
 
-return {species:"cat", stage:"young", exemplarBreed:"Persian", questions, watchFor, breedRiskNotes, sources};
+return {species:"cat", stage:"young", exemplarBreed:"Persian", questions, watchFor, breedRiskNotes, breedConditionalQuestions, sources};
 
 });

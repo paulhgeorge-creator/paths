@@ -50,6 +50,23 @@ const watchFor = [
   "Dental tartar building up unnoticed - easy to miss at this age since it rarely causes an obvious symptom yet",
 ];
 
+/* Breed-conditional net-new modules (not asked at all unless the pet's
+   breed/weight actually matches - a non-brachy young Labrador never sees
+   the BOAS module). Phrased for a YOUNG dog specifically: BOAS signs framed
+   as often just emerging, growth-plate risk framed around still-growing
+   joints - a middle-aged or senior dog of the same breed gets differently-
+   framed versions of these in middle-dog.js/senior-dog.js, not a copy-paste. */
+const breedConditionalQuestions = [
+  {tags:["brachycephalic"], questions:[
+    {id:"boas_noisy_breathing", round:3, text:{both:"Loud snoring, snorting, or noisy breathing - even at rest or while asleep?"}},
+    {id:"boas_heat_exercise", round:3, text:{both:"Gets more out of breath, or needs to stop, in warm weather or after only modest exercise?"}},
+    {id:"boas_gi_signs", round:3, text:{both:"Frequent regurgitation, gagging, or vomiting shortly after eating or exercise?"}},
+  ]},
+  {tags:["giant"], questions:[
+    {id:"giant_growth_exercise", round:1, text:{both:"Any limping after hard running or jumping, before they're fully done growing?"}},
+  ]},
+];
+
 const breedRiskNotes = [
   {tags:["brachycephalic"],
     text:"Watch for noisy or labored breathing, snoring, or reduced heat/exercise tolerance. One peer-reviewed prevalence study found 64% of French Bulldogs showed owner-observable BOAS signs, but only 13% had a formal vet diagnosis - a real diagnostic gap this kind of question is meant to help close.",
@@ -65,6 +82,6 @@ const breedRiskNotes = [
     sourceIds:[]},
 ];
 
-return {species:"dog", stage:"young", exemplarBreed:"French Bulldog", questions, watchFor, breedRiskNotes, sources};
+return {species:"dog", stage:"young", exemplarBreed:"French Bulldog", questions, watchFor, breedRiskNotes, breedConditionalQuestions, sources};
 
 });

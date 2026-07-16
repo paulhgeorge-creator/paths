@@ -356,6 +356,24 @@ function activeStageContent(){
 const ALL_BASE_QUESTIONS_BY_ID = {};
 [PART1_CORE_BASE, PART2_BASE, PART3_BASE, PART4_BASE].forEach(arr => arr.forEach(q => { ALL_BASE_QUESTIONS_BY_ID[q.id] = q; }));
 
+/* Breed-conditional net-new items (e.g. a BOAS module that only appears for
+   brachycephalic dogs, an IVDD module only for chondrodystrophic dogs) -
+   reuses the exact same petBreedTags() matcher breedRiskNotes already use,
+   just applied to actual scored questions instead of watch-for copy. Each
+   group is {tags:[...], questions:[{...round-tagged net-new item...}]};
+   only groups whose tags overlap this pet's tags contribute their
+   questions. This is how "tailored to both age and breed at once" works -
+   a French Bulldog taking the young-dog survey gets the young-dog base set
+   PLUS a BOAS module; a non-brachy young Labrador gets just the base set. */
+function matchedConditionalQuestions(content){
+  if (!content.breedConditionalQuestions) return [];
+  const b = state.baseline;
+  const tags = petBreedTags(b.species, b.breed, weightKg());
+  return content.breedConditionalQuestions
+    .filter(group => group.tags.some(t => tags.includes(t)))
+    .flatMap(group => group.questions);
+}
+
 function assembleActiveParts(){
   const content = activeStageContent();
   if (!content) return {part1:PART1_CORE_BASE, part2:PART2_BASE, part3:PART3_BASE, part4:PART4_BASE};
@@ -373,6 +391,7 @@ function assembleActiveParts(){
     if (q.round === undefined && ALL_BASE_QUESTIONS_BY_ID[q.id]) overridesById[q.id] = q;
     else netNew.push(q);
   });
+  netNew.push(...matchedConditionalQuestions(content));
   function resolve(q){ return overridesById[q.id] ? {...q, ...overridesById[q.id]} : q; }
   function build(baseArr, roundNum){
     const kept = baseArr.filter(q => refIds.has(q.id) || overridesById[q.id]).map(resolve);

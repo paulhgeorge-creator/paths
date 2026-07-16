@@ -10,7 +10,12 @@
    signs in one cohort) - a pure symptom-question survey has a real
    detection ceiling here. Cherry-pick #6 (ceo-plans doc): the breed-risk
    note below says so plainly instead of implying symptom-watching alone is
-   sufficient. */
+   sufficient.
+
+   No breed-conditional module here (unlike the dog files) - Maine Coon
+   isn't in any existing name-tag list, so these HCM items live directly in
+   the base question set instead, since Maine Coon is this whole cell's
+   assumed default framing regardless of what breed was actually typed in. */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
   else { root.PawlStageContent = root.PawlStageContent || {}; root.PawlStageContent["middle-cat"] = factory(); }
@@ -32,10 +37,12 @@ const questions = [
   "coat_dental_skin_gate", "coat_dental_skin_detail",
   "water_urination_continence_gate", "water_detail",
   "p3_digestion",
-  {id:"p3_breathing", text:{both:"New rapid or labored breathing, or a rare fainting episode?"}},
+  {id:"p3_breathing", text:{both:"New rapid or labored breathing after only mild activity?"}},
+  {id:"hcm_syncope", round:3, text:{both:"A rare fainting, sudden weakness, or collapse episode?"}},
   "temperature_pain_gate", "discomfort_detail",
   "p4_diagnoses", "p4_medications", "p4_vet_visits", "p4_dental_history",
   "p4_surgical_history", "p4_bloodwork", "p4_organ_findings", "p4_owner_concern",
+  {id:"hcm_screening_history", round:4, text:{both:"Has a vet ever run an echocardiogram or genetic test for heart disease on this cat?"}, opts:[{v:0,label:"Yes, tested/screened"},{v:1,label:"No / not sure"}]},
 ];
 
 const watchFor = [

@@ -166,5 +166,55 @@ test("dog files declare giant-breed matcher notes; cat files never do (petBreedT
   }
 });
 
+const VALID_TAGS = new Set(["brachycephalic", "chondrodystrophic", "giant", "generic"]);
+
+test("every breedConditionalQuestions group has a valid, non-empty tags array and a non-empty questions array", () => {
+  for (const f of FILES) {
+    for (const group of (modules[f].breedConditionalQuestions || [])) {
+      assert.ok(Array.isArray(group.tags) && group.tags.length, `${f}: conditional group missing tags`);
+      for (const t of group.tags) assert.ok(VALID_TAGS.has(t), `${f}: unknown tag "${t}" in conditional group (petBreedTags() only ever produces ${[...VALID_TAGS].join("/")})`);
+      assert.ok(Array.isArray(group.questions) && group.questions.length, `${f}: conditional group has no questions`);
+    }
+  }
+});
+
+test("every breedConditionalQuestions item is genuinely net-new: has an id, a round tag, and text, and doesn't collide with a real index.html id", () => {
+  for (const f of FILES) {
+    for (const group of (modules[f].breedConditionalQuestions || [])) {
+      for (const q of group.questions) {
+        assert.ok(q.id, `${f}: conditional question missing id`);
+        assert.ok(q.round !== undefined, `${f}: conditional question "${q.id}" missing round tag`);
+        assert.ok(q.text && (q.text.both || q.text.dog || q.text.cat), `${f}: conditional question "${q.id}" missing text`);
+        assert.ok(!REAL_INDEX_HTML_IDS.has(q.id), `${f}: conditional question id "${q.id}" collides with a real index.html id`);
+      }
+    }
+  }
+});
+
+test("no id collision between a file's base net-new questions and its breedConditionalQuestions items (both could render together for a matching pet)", () => {
+  for (const f of FILES) {
+    const baseIds = modules[f].questions.filter(q => typeof q === "object").map(q => q.id);
+    const conditionalIds = (modules[f].breedConditionalQuestions || []).flatMap(g => g.questions.map(q => q.id));
+    const combined = [...baseIds, ...conditionalIds];
+    const dupes = combined.filter((id, i) => combined.indexOf(id) !== i);
+    assert.equal(dupes.length, 0, `${f}: id(s) ${dupes.join(", ")} appear in both the base question set and a breed-conditional module`);
+  }
+});
+
+test("breed-conditional modules exist where a real name-tag lets them fire: BOAS for brachy dog stages, IVDD for chondro dog stages, cancer-watch for giant senior-dog, PKD-screening for brachy young-cat", () => {
+  for (const f of ["young-dog", "middle-dog", "senior-dog"]) {
+    assert.ok((modules[f].breedConditionalQuestions || []).some(g => g.tags.includes("brachycephalic")),
+      `${f}: expected a brachycephalic-conditional module (BOAS)`);
+  }
+  for (const f of ["middle-dog", "senior-dog"]) {
+    assert.ok((modules[f].breedConditionalQuestions || []).some(g => g.tags.includes("chondrodystrophic")),
+      `${f}: expected a chondrodystrophic-conditional module (IVDD)`);
+  }
+  assert.ok((modules["senior-dog"].breedConditionalQuestions || []).some(g => g.tags.includes("giant")),
+    "senior-dog: expected a giant-conditional cancer-watch module");
+  assert.ok((modules["young-cat"].breedConditionalQuestions || []).some(g => g.tags.includes("brachycephalic")),
+    "young-cat: expected a brachycephalic-conditional module (PKD screening)");
+});
+
 console.log(failed ? `\n${failed} test(s) failed` : "\nAll tests passed");
 process.exit(failed ? 1 : 0);

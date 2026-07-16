@@ -39,6 +39,24 @@ const watchFor = [
   "Early joint stiffness or reduced stamina on walks that wasn't there a year or two ago",
 ];
 
+/* Breed-conditional net-new modules - only asked when the pet's breed
+   actually matches. IVDD items go beyond mob_gate's reworded jump/hunch
+   gate into specific neurologic signs (handling sensitivity, gait) that
+   are the real vet-visit triggers per the FGF4/IVDD research. BOAS items
+   reuse young-dog.js's module but framed as an established, ongoing
+   condition ("still...") rather than an emerging one - the same breed
+   trait reads differently depending on how long it's been going on. */
+const breedConditionalQuestions = [
+  {tags:["chondrodystrophic"], questions:[
+    {id:"ivdd_handling", round:1, text:{both:"Crying out, flinching, or reluctance when picked up or touched along the back?"}},
+    {id:"ivdd_gait", round:1, text:{both:"Front or hind legs dragging, knuckling under, or an unsteady/wobbly gait?"}},
+  ]},
+  {tags:["brachycephalic"], questions:[
+    {id:"boas_noisy_breathing", round:3, text:{both:"Snoring or noisy breathing that's gotten louder or more frequent recently?"}},
+    {id:"boas_heat_exercise", round:3, text:{both:"Still getting more out of breath in warm weather or after modest exercise, even if 'that's just how they've always been'?"}},
+  ]},
+];
+
 const breedRiskNotes = [
   {tags:["chondrodystrophic"],
     text:"Dachshunds and other chondrodystrophic breeds (Corgis, Basset Hounds, French Bulldogs) carry a real, breed-typical early spinal-disc risk (FGF4-driven). Sudden back pain, reluctance to jump, or dragging/wobbly hind legs is an IVDD emergency sign - same-day vet visit, not wait-and-see.",
@@ -54,6 +72,6 @@ const breedRiskNotes = [
     sourceIds:[]},
 ];
 
-return {species:"dog", stage:"middle", exemplarBreed:"Dachshund", questions, watchFor, breedRiskNotes, sources};
+return {species:"dog", stage:"middle", exemplarBreed:"Dachshund", questions, watchFor, breedRiskNotes, breedConditionalQuestions, sources};
 
 });

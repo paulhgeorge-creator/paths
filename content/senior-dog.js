@@ -34,7 +34,7 @@ const sources = [
 const questions = [
   {id:"mob_gate", text:{both:"Any new stiffness getting up, reluctance on stairs, or a limp that's stuck around?"}},
   "p1_activity", "p1_exhaustion",
-  {id:"p3_exercise_tolerance", text:{both:"Stopping to rest on normal walks, a new limp, or any swelling on a leg?"}},
+  {id:"p3_exercise_tolerance", text:{both:"Stopping to rest on normal walks that didn't used to bother them?"}},
   {id:"p3_muscle", text:{both:"Noticeable muscle loss over the back or hind legs?"}},
   "p2_vision", "p2_hearing", "p2_sleep", "p2_interaction", "p1_vitality",
   {id:"cog_disorientation", round:2, text:{both:"Getting \"stuck\" in corners, doorways, or under furniture, staring blankly at walls, or seeming confused in familiar places?"}},
@@ -61,6 +61,27 @@ const watchFor = [
   "Joint pain and reduced mobility that's crept up gradually enough to not seem urgent",
 ];
 
+/* Breed-conditional net-new modules. Giant-breed items are a dedicated
+   limb/swelling check (separate from the general p3_exercise_tolerance
+   above, not a duplicate of it) - the actual owner-observable cancer-watch
+   signs the osteosarcoma research flagged. Chondrodystrophic/brachycephalic
+   items reuse the same conditions as young-dog.js/middle-dog.js but framed
+   for a senior dog specifically ("still" / "at this age" language matching
+   the breedRiskNotes copy below), not copy-pasted verbatim. */
+const breedConditionalQuestions = [
+  {tags:["giant"], questions:[
+    {id:"giant_limb_swelling", round:1, text:{both:"Any new swelling, lump, or firm spot on a leg?"}},
+    {id:"giant_limp_progression", round:1, text:{both:"A limp that's gotten worse over the past few weeks rather than better?"}},
+  ]},
+  {tags:["chondrodystrophic"], questions:[
+    {id:"ivdd_handling", round:1, text:{both:"Crying out, flinching, or reluctance when picked up or touched along the back - still, at this age?"}},
+    {id:"ivdd_gait", round:1, text:{both:"Front or hind legs dragging, knuckling under, or an unsteady/wobbly gait?"}},
+  ]},
+  {tags:["brachycephalic"], questions:[
+    {id:"boas_heat_exercise", round:3, text:{both:"Breathing noisily or needing to stop in warm weather or after modest exercise, even at this age?"}},
+  ]},
+];
+
 const breedRiskNotes = [
   {tags:["giant"],
     text:"Giant breeds carry a real, well-documented elevated osteosarcoma risk (one large UK study found Great Danes at roughly 34x the odds of crossbred dogs) alongside their earlier senior-onset window. A new or worsening limp, or any swelling on a leg, deserves prompt vet attention rather than a wait-and-see - these can look like a normal orthopedic strain at first. (A commonly-cited Great Dane/DCM heart-disease link could not be independently verified this pass and isn't asserted here.)",
@@ -76,6 +97,6 @@ const breedRiskNotes = [
     sourceIds:[]},
 ];
 
-return {species:"dog", stage:"senior", exemplarBreed:"Great Dane", questions, watchFor, breedRiskNotes, sources};
+return {species:"dog", stage:"senior", exemplarBreed:"Great Dane", questions, watchFor, breedRiskNotes, breedConditionalQuestions, sources};
 
 });
