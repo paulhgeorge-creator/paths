@@ -149,14 +149,17 @@
 <body>
 <div class="wrap" id="app"></div>
 
-<script src="frailty-model.js"></script>
-<script src="age-estimator.js"></script>
-<script src="content/young-dog.js"></script>
-<script src="content/middle-dog.js"></script>
-<script src="content/senior-dog.js"></script>
-<script src="content/young-cat.js"></script>
-<script src="content/middle-cat.js"></script>
-<script src="content/senior-cat.js"></script>
+<!-- ?v= is a manual cache-buster (no build step to hash these automatically) -
+     bump it whenever any of these files change, so a normal refresh (not
+     just a hard-refresh) always picks up the latest version. -->
+<script src="frailty-model.js?v=2"></script>
+<script src="age-estimator.js?v=2"></script>
+<script src="content/young-dog.js?v=2"></script>
+<script src="content/middle-dog.js?v=2"></script>
+<script src="content/senior-dog.js?v=2"></script>
+<script src="content/young-cat.js?v=2"></script>
+<script src="content/middle-cat.js?v=2"></script>
+<script src="content/senior-cat.js?v=2"></script>
 <script>
 /* ---------- Data model ---------- */
 /* Deficit score: 0 absent, 0.5 mild, 1 severe/present.
