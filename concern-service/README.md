@@ -40,6 +40,15 @@ are configured. `concern-analyzer.js` (the client) treats `not-configured`,
 nothing else in the questionnaire is affected - the owner's typed text is
 still saved either way, it just won't get AI-extracted highlights.
 
+**Hardening (2026-07-20)**: `/analyze-concern` is CORS-restricted to an
+origin allowlist (default: `null` for `file://` plus a couple common local
+static-server ports - override with `CONCERN_SERVICE_ALLOWED_ORIGINS`,
+comma-separated) and rate-limited to 20 requests/minute per IP via a plain
+in-memory sliding window (no Redis/flask-limiter - this is a local,
+single-worker dev service; the limiter resets on restart and isn't shared
+across multiple workers, which is fine for that shape of deployment but
+worth knowing if that ever changes).
+
 ## Run it
 
 ```

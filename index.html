@@ -24,7 +24,7 @@
      rather than editing PV_WIDGET_HTML - that block stays byte-identical. */
   :root{
     --pv-cream:#fff8f1; --pv-ash:#e2e8f0; --pv-ink:#000000; --pv-blue:#006eff;
-    --pv-muted:#6b7280; --pv-warn:#c2410c; --pv-warn-bg:#fdece2;
+    --pv-muted:#4b5563; --pv-warn:#c2410c; --pv-warn-bg:#fdece2;
     --pv-font-display:'Cormorant','Editorial New',ui-serif,Georgia,serif;
     --pv-font-body:'Inter','Founders Grotesk',ui-sans-serif,system-ui,sans-serif;
     --pv-radius-pill:60px;
@@ -99,12 +99,15 @@
     opacity:0;pointer-events:none;transition:opacity .15s ease;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:20;
   }
   [data-tooltip]:hover::after, [data-tooltip]:focus-visible::after{opacity:1;}
+  .pv-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
   .pv-toggle svg{width:18px;height:auto;}
   .pv-toggle.pv-selected, .pv-segment.pv-selected, .pv-chip.pv-selected{border-color:var(--pv-blue);border-width:1.5px;background:rgba(0,110,255,.06);}
+  .pv-toggle:focus-visible, .pv-segment:focus-visible, .pv-chip:focus-visible{outline:2px solid var(--pv-blue);outline-offset:2px;}
 
   .pv-slider-wrap{display:flex;flex-direction:column;gap:6px;}
   .pv-slider-value{font-family:var(--pv-font-display);font-weight:100;font-size:clamp(28px,4vw,40px);color:var(--pv-blue);}
   input[type="range"]{-webkit-appearance:none;width:100%;height:2px;background:var(--pv-ash);outline:none;}
+  input[type="range"]:focus-visible{box-shadow:0 0 0 3px rgba(0,110,255,.25);border-radius:4px;}
   input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--pv-cream);border:1.5px solid var(--pv-blue);cursor:pointer;}
   input[type="range"]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--pv-cream);border:1.5px solid var(--pv-blue);cursor:pointer;}
   .pv-scale-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--pv-muted);margin-top:4px;text-transform:uppercase;}
@@ -231,7 +234,7 @@ const { lifeStage, lifeStageDisplay, fiZone, longevityScore, LONGEVITY_SCORE_ANC
         BCS_CHART, getActivityMinutesThreshold, activityGuidance,
         dogSizeClass, CHONDRODYSTROPHIC_BREEDS, BRACHY_BREEDS,
         petBreedTags, matchBreedRiskNotes,
-        expectedFIContinuous, breedModifier } = window.FrailtyModel;
+        expectedFIContinuous, breedModifier, seniorGuessAge } = window.FrailtyModel;
 
 const KG_PER_LB = 0.45359237;
 
@@ -402,7 +405,12 @@ function computeFinalAge(){
   if (b.photoEstimate && b.photoEstimate.confidence > 0) {
     signals.push({years: b.photoEstimate.years, confidence: b.photoEstimate.confidence});
   }
-  signals.push({years: AGE_GUESS.adult, confidence: 0.1}); // last-resort prior so fusion is never empty
+  // Last-resort prior so fusion is never empty. Was AGE_GUESS.adult (flat 5,
+  // species/size-unaware) - switched to seniorGuessAge(), the size-aware
+  // senior-onset age frailty-model.js's own comment calls "preferred for the
+  // size-aware case" (it was exported and tested but never actually wired
+  // in here - the real fix this shipped for was never live in the app).
+  signals.push({years: seniorGuessAge(b.species, weightKg()), confidence: 0.1});
   return fuseAge(signals);
 }
 
@@ -788,7 +796,7 @@ const PV_WIDGET_HTML = `
     }
     .pv-headline{
       font-family:var(--pv-font-display); font-weight:400; color:var(--pv-blue);
-      font-size:clamp(24px,3vw,34px); line-height:1; margin:0 0 24px;
+      font-size:clamp(24px,3vw,34px); line-height:1; margin:0 0 12px;
     }
 
     .pv-grid{
@@ -825,6 +833,9 @@ const PV_WIDGET_HTML = `
     .pv-toggle.pv-selected, .pv-segment.pv-selected, .pv-chip.pv-selected{
       border-color:var(--pv-blue); border-width:1.5px;
     }
+    .pv-toggle:focus-visible, .pv-segment:focus-visible, .pv-chip:focus-visible{
+      outline:2px solid var(--pv-blue); outline-offset:2px;
+    }
     [data-tooltip]{ position:relative; }
     [data-tooltip]::after{
       content:attr(data-tooltip); position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
@@ -842,6 +853,9 @@ const PV_WIDGET_HTML = `
     }
     .pv-field input[type="range"]{
       -webkit-appearance:none; width:100%; height:2px; background:var(--pv-ash); outline:none;
+    }
+    .pv-field input[type="range"]:focus-visible{
+      box-shadow:0 0 0 3px rgba(0,110,255,.25); border-radius:4px;
     }
     .pv-field input[type="range"]::-webkit-slider-thumb{
       -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
@@ -935,16 +949,23 @@ const PV_WIDGET_HTML = `
       <div class="pv-field" style="grid-column:1/-1;">
         <label>Daily activity level</label>
         <div class="pv-segmented" data-pv="activity-group" style="flex-wrap:nowrap;gap:6px;">
-          <button type="button" class="pv-segment" data-pv="activity" data-val="low" style="padding:9px 10px;flex:1;justify-content:center;white-space:nowrap;"
+          <button type="button" class="pv-segment" data-pv="activity" data-val="low" id="pv-activity-low" aria-describedby="pv-activity-low-desc" style="padding:9px 10px;flex:1;justify-content:center;white-space:nowrap;"
             data-title-dog="Minimal structured exercise: one or two short leash walks, mostly resting indoors."
             data-title-cat="Minimal structured exercise: brief interactive play, mostly lounging/sleeping.">🐾 Low</button>
-          <button type="button" class="pv-segment" data-pv="activity" data-val="moderate" style="padding:9px 10px;flex:1;justify-content:center;white-space:nowrap;"
+          <button type="button" class="pv-segment" data-pv="activity" data-val="moderate" id="pv-activity-moderate" aria-describedby="pv-activity-moderate-desc" style="padding:9px 10px;flex:1;justify-content:center;white-space:nowrap;"
             data-title-dog="Regular daily activity: 30-45 min of walks or fetch spread across the day."
             data-title-cat="Regular daily activity: a few 5-10 min play bursts plus normal roaming.">🐾🐾 Moderate</button>
-          <button type="button" class="pv-segment" data-pv="activity" data-val="high" style="padding:9px 10px;flex:1;justify-content:center;white-space:nowrap;"
+          <button type="button" class="pv-segment" data-pv="activity" data-val="high" id="pv-activity-high" aria-describedby="pv-activity-high-desc" style="padding:9px 10px;flex:1;justify-content:center;white-space:nowrap;"
             data-title-dog="Vigorous, sustained activity most days: 60+ min of running, hiking, or high-energy training."
             data-title-cat="Vigorous, sustained activity most days: frequent active play, climbing, or lots of movement.">🐾🐾🐾 High</button>
         </div>
+        <!-- Visually-hidden descriptions (2026-07-20, accessibility fix) - the
+             [data-tooltip] CSS tooltip is content:attr()-driven, which screen
+             readers don't reliably announce; these give the same per-species
+             text a real accessible-name path via aria-describedby. -->
+        <span class="pv-sr-only" id="pv-activity-low-desc" data-pv="activity-desc"></span>
+        <span class="pv-sr-only" id="pv-activity-moderate-desc" data-pv="activity-desc"></span>
+        <span class="pv-sr-only" id="pv-activity-high-desc" data-pv="activity-desc"></span>
       </div>
 
       <div class="pv-field" style="grid-column:1 / -1;">
@@ -1074,12 +1095,15 @@ function wirePetVitalsToState(root){
   // description (data-title-dog/data-title-cat) - this keeps the tooltip
   // shown to one species at a time instead of listing both in the same
   // hover, so owners never see the other species' examples mixed into their
-  // own. Uses data-tooltip (CSS-driven custom tooltip, .pv-tooltip-target)
-  // rather than the native title attribute, which rendered as an
-  // unstyleable OS tooltip - not this app's own visual language.
+  // own. Uses data-tooltip (CSS-driven via the [data-tooltip] rule) rather
+  // than the native title attribute, which rendered as an unstyleable OS
+  // tooltip - not this app's own visual language.
   function syncActivityTitles(){
     root.querySelectorAll('[data-pv="activity"]').forEach(btn=>{
-      btn.dataset.tooltip = b.species === "cat" ? btn.dataset.titleCat : btn.dataset.titleDog;
+      const text = b.species === "cat" ? btn.dataset.titleCat : btn.dataset.titleDog;
+      btn.dataset.tooltip = text;
+      const desc = document.getElementById(btn.id + "-desc");
+      if (desc) desc.textContent = text;
     });
   }
   // Toggling species here does NOT call render() (this whole widget updates

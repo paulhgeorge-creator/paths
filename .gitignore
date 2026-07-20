@@ -1,3 +1,6 @@
 .gstack/
 __pycache__/
 *.pyc
+.env
+.env.*
+concern-service/.env
