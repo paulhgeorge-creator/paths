@@ -55,20 +55,25 @@ function lifeStageDisplay(species, chronAge, weightKg){
    shape rather than an invented curve.
    ponytail: BETA, MAX_DELTA_YEARS, BRACHY/CHONDRO_BREED_FI_MODIFIER,
    CAT_DELTA_DAMPENING, and the activity-minutes table are still placeholder
-   constants - no public source gives a numeric FI-delta-to-years coefficient,
-   breed-modifier magnitude, or feline FI-age curve. Swap in real numbers if
-   an internal Pawl dataset produces them.
-   NOTE: README.md's "Teng et al. 2024" vs. a previously-cited "McMillan et
-   al. 2024" remains unresolved - neither could be verified as a real
-   canine/feline frailty-index paper via public search. Calibrating off
-   Banzato 2019 in the meantime rather than guessing. */
+   constants - a 2026-07-19 deep-research re-check (99 agents, adversarial
+   verification) reconfirms no public source gives a numeric FI-delta-to-years
+   coefficient, breed-modifier magnitude, or feline FI-age curve. Swap in real
+   numbers if an internal Pawl dataset produces them.
+   NOTE: citation resolved - "Teng et al. 2024" is a real paper (Teng, Brodbelt,
+   Church, O'Neill, J Feline Med Surg 26(5), DOI 10.1177/1098612X241234556) but
+   it's a feline life-table/mortality-risk-factor study with zero frailty
+   content, so it cannot be the source of any FI-delta-to-years claim.
+   "McMillan et al. 2024" does not resolve to any real frailty/life-years
+   paper in an exhaustive search - unverifiable, likely a misattribution.
+   Neither is a valid citation for this coefficient; Banzato 2019 remains the
+   only real calibration anchor in use (for EXPECTED_FI_ANCHORS only). */
 const FRAILTY_MODEL_CONFIG = {
   BETA: 20,                           // years of physiological-age shift per unit of FI delta
   MAX_DELTA_YEARS: 6,                 // hard clamp on |delta| regardless of how extreme observedFI is
   EXPECTED_FI_ANCHORS: {young:0.08, middle:0.11, senior:0.23}, // Banzato et al. 2019 reported means
   BRACHY_BREED_FI_MODIFIER: 0.03,     // added to expectedFI for brachycephalic breeds
   CHONDRO_BREED_FI_MODIFIER: 0.02,    // added to expectedFI for chondrodystrophic breeds (spinal-disc risk, not the same claim as brachy)
-  CAT_DELTA_DAMPENING: 0.75,          // no feline FI-age curve exists in the literature; pull cat deltas toward "typical" instead of assuming dog anchors transfer 1:1
+  CAT_DELTA_DAMPENING: 0.75,          // no feline FI-age curve exists in the literature (Colleran et al. 2025's pilot is a binary frail/not-frail classifier, not an age-stratified curve, and says so explicitly); pull cat deltas toward "typical" instead of assuming dog anchors transfer 1:1
   MAX_AGE_FRACTION: 3,                // cap on ageFraction() extrapolation for very old pets
   SENIOR_EXTENSION_SLOPE_FACTOR: 0.5, // diminishing eFI growth rate applied past senior onset
   DELTA_INDICATOR_THRESHOLD_YEARS: 0.5, // |delta| below this reads as "about typical" in copy
@@ -179,9 +184,13 @@ function classifyDelta(delta, threshold){
    minutes-to-years coefficients) confirms no size/breed-stratified numeric
    activity standard exists publicly - only a general "30min-2hr/day" range
    by energy level, and validated proxies like timed mobility trials, not a
-   minutes threshold. Size-class defaults stay illustrative placeholders
-   within that general range. Swap in real thresholds if a real standard or
-   internal dataset is ever published. */
+   minutes threshold. A 2026-07-19 deep-research re-check found one 2025
+   population-scale accelerometer study reporting descriptive average daily-
+   activity minutes by breed-size class, but it explicitly warns against using
+   single population-level numbers as a prescriptive standard - so it doesn't
+   convert this placeholder into a real threshold. Size-class defaults stay
+   illustrative placeholders within the general range. Swap in real thresholds
+   if a real standard or internal dataset is ever published. */
 const ACTIVITY_MINUTES_TABLE = {
   dog: {small:30, medium:45, large:60, giant:45},
   cat: 20,

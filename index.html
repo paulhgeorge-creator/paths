@@ -5,14 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pawl - Vitality Check</title>
 <!-- The design tokens below (--pv-font-display/--pv-font-body) already name
-     Cormorant + Inter as the Pawl app's own fonts - they just weren't being
-     loaded, so every page silently fell back to system serif/sans-serif.
-     This loads the real families so "same font as the Pawl app" actually
-     renders, instead of swapping in a different, unverified font choice. -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+     Cormorant + Inter as the Pawl app's own fonts. Self-hosted under
+     assets/fonts/ (2026-07-20) - real .woff2 files from the @fontsource
+     npm packages, not a Google Fonts network call - restoring the "no build
+     step, no network needed" property (BCS chart images were already local
+     assets; this was the app's only other external network dependency). -->
 <style>
+  @font-face{font-family:'Cormorant';font-style:normal;font-weight:300;font-display:swap;src:url('assets/fonts/cormorant-300.woff2') format('woff2');}
+  @font-face{font-family:'Cormorant';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/cormorant-400.woff2') format('woff2');}
+  @font-face{font-family:'Cormorant';font-style:normal;font-weight:500;font-display:swap;src:url('assets/fonts/cormorant-500.woff2') format('woff2');}
+  @font-face{font-family:'Inter';font-style:normal;font-weight:300;font-display:swap;src:url('assets/fonts/inter-300.woff2') format('woff2');}
+  @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('assets/fonts/inter-400.woff2') format('woff2');}
+  @font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url('assets/fonts/inter-500.woff2') format('woff2');}
+
   /* Same design language as the pv-root baseline widget, applied to every
      page (BCS, Part 1-4, results, completion) so the whole flow reads as one
      product. Duplicates the widget's own scoped rules (harmless, idempotent)
@@ -118,22 +123,21 @@
   .pv-insight-title{font-weight:400;font-size:15px;margin-bottom:10px;color:var(--pv-ink);}
   .pv-card ul{margin:0;padding-left:20px;}
   .pv-card li{font-size:14px;color:var(--pv-ink);margin-bottom:6px;line-height:1.4;}
-  /* Citation tooltip (cherry-pick #4) - a real inline <button>, not a bare
-     title-attribute hover, so it's keyboard/screen-reader reachable (design
-     review finding). Sized to sit inline after a li's text without pushing
-     it onto a new line or breaking the narrow-mobile-width budget already
-     fought once for the activity-level buttons. */
-  .pv-cite-btn{display:inline-block;border:1px solid var(--pv-blue);border-radius:999px;background:transparent;color:var(--pv-blue);font-size:11px;line-height:1;padding:2px 7px;margin-left:6px;cursor:pointer;vertical-align:middle;}
-  .pv-cite-btn:hover,.pv-cite-btn:focus-visible{opacity:.75;}
-  .pv-cite-pop{list-style:none;margin:6px 0 0;padding:8px 10px;background:var(--pv-cream);border:1px solid var(--pv-ash);border-radius:10px;font-size:12px;}
-  .pv-cite-pop li{margin-bottom:4px;}
-  .pv-cite-pop a{color:var(--pv-blue);}
   .pv-badge{display:inline-block;background:rgba(0,110,255,.08);color:var(--pv-blue);font-weight:400;font-size:13px;padding:6px 14px;border-radius:999px;margin-bottom:14px;}
+  /* Aito the guide (2026-07-20, direct request) - a small persistent
+     presence on dog-only pages. Reuses .pv-card's rounded-callout language
+     (just tinted) rather than inventing a new visual style. */
+  .pv-guide{display:flex;gap:10px;align-items:flex-start;background:rgba(0,110,255,.05);border:1.5px solid var(--pv-ash);border-radius:14px;padding:14px 16px;margin-bottom:16px;text-align:left;}
+  .pv-guide-icon{flex-shrink:0;width:48px;height:48px;}
+  .pv-guide-icon svg{width:100%;height:100%;}
+  .pv-guide-text{font-size:13px;line-height:1.45;color:var(--pv-ink);}
+  .pv-guide-text p{margin:0 0 6px;}
+  .pv-guide-text p:last-child{margin-bottom:0;}
+  .pv-guide-name{font-weight:600;color:var(--pv-blue);}
   .pv-tone{font-size:13px;font-weight:500;color:var(--pv-ink);margin-top:6px;}
   .pv-bar{height:8px;border-radius:999px;background:var(--pv-ash);overflow:hidden;}
   .pv-bar-fill{height:100%;background:var(--pv-blue);border-radius:999px;transition:width .2s;}
   .pv-bar-copy{font-size:13px;color:var(--pv-muted);margin-top:6px;}
-  .pv-bar.pv-current{outline:1.5px solid var(--pv-blue);outline-offset:2px;}
   .pv-dev-table{width:100%;border-collapse:collapse;font-size:13px;}
   .pv-dev-table th,.pv-dev-table td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--pv-ash);white-space:nowrap;}
   .pv-dev-table th{color:var(--pv-muted);font-weight:500;}
@@ -154,6 +158,7 @@
      just a hard-refresh) always picks up the latest version. -->
 <script src="frailty-model.js?v=2"></script>
 <script src="age-estimator.js?v=2"></script>
+<script src="concern-analyzer.js?v=2"></script>
 <script src="content/young-dog.js?v=2"></script>
 <script src="content/middle-dog.js?v=2"></script>
 <script src="content/senior-dog.js?v=2"></script>
@@ -174,7 +179,8 @@ const { lifeStage, lifeStageDisplay, fiZone, longevityScore, healthMultiplier, f
         bandYears, AGE_GUESS, overweightPercentile, fuseAge, deltaPercentOfAge,
         BCS_CHART, getActivityMinutesThreshold, activityGuidance,
         dogSizeClass, CHONDRODYSTROPHIC_BREEDS, BRACHY_BREEDS,
-        petBreedTags, matchBreedRiskNotes } = window.FrailtyModel;
+        petBreedTags, matchBreedRiskNotes,
+        expectedFIContinuous, breedModifier } = window.FrailtyModel;
 
 const KG_PER_LB = 0.45359237;
 
@@ -263,19 +269,21 @@ const PART4_BASE = [
 
 /* ---------- App state ---------- */
 const state = {
-  // baseline -> bcs -> part1 -> result1 -> part2 -> result2 -> part3 -> result3 -> part4 -> result4 -> complete
+  // pathchooser -> baseline -> bcs -> part1 -> result1 -> part2 -> result2 ->
+  // part3 -> result3 -> part4 -> result4 -> complete
   // (or baseline -> puppykitten -> puppykittensummary for a pet under 1yr -
   // see renderBaseline()'s #wiz-next routing branch)
-  // "pathchooser" still exists (renderPathChooser()) but is now a hidden
-  // dev-only shortcut reachable only from the dev breakdown page's "Jump to
-  // a preset pet" link - not the default entry, per product direction
-  // ("three separate quiz paths not needed; refine and extend the single
-  // quiz" - baseline is the one real entry point a pet owner ever sees).
-  step:"baseline",
+  // "pathchooser" restored as the default entry (2026-07-20, direct request)
+  // - a prior pass had demoted it to a hidden dev-only shortcut per stakeholder
+  // feedback ("three separate quiz paths not needed"), reversed here. Its own
+  // "Or set up your own pet manually" link still skips straight to baseline
+  // for anyone who doesn't want a preset.
+  step:"pathchooser",
   baseline:{
     species:"dog", name:"", breed:"",
     weightValue:44, weightUnit:"lb", // widget's weight field is lbs-only (no kg toggle in this UI) - 44lb ~= 20kg, same effective default as before
-    sexNeuter:"male-neutered",
+    sexNeuter:"unknown", // informational only - see reproductive-status note above, not part of the FI denominator
+    weightGoal:"maintain", // owner-stated intent (gain/maintain/lose) - informational, reconciled against BCS on the BCS step, not a scoring input
     dobKnown:true, dobMonth:"", dobDay:"", dobYear:"",
     yearsOnlyAge:"",
     bcs:5,
@@ -284,6 +292,11 @@ const state = {
   },
   answers:{}, // id -> score
   bonding:{}, // id -> selected opt value, puppy/kitten flow only - NEVER read by idsForPart()/categoryFI()/computeResult(), deliberately zero scoring
+  // Round 4's optional free-text concern field (separate from the scored
+  // p4_owner_concern scale question) - text is never scored, highlights are
+  // AI-extracted via concern-service/ (optional, degrades gracefully - see
+  // concern-analyzer.js).
+  concern:{text:"", highlights:[], status:null},
   details:{}, // id -> informational-only detail answer (detailOnly questions) - never enters the FI denominator
   decisionLog:{}, // id -> {stepOrder, timestamp, category, label, selectedLabel, score} - the decision-visualization trail
   decisionStepCounter:0,
@@ -296,6 +309,7 @@ const state = {
   // fresh applyPathPreset(). Do not add persistence here - that's a
   // deliberate scope boundary, not an oversight.
   resultHistory:{},
+  devBreakdownReturnTo:null, // which step to Back to from "devbreakdown" - set right before switching to it, since it's reachable from multiple pages now
   followup:{
     exerciseMinutes:"", // seeded from p1_activity once the complete page first renders
     mealsPerDay:"",
@@ -464,103 +478,38 @@ function recomputeDerivedMobGate(){
   if (answered.length) state.answers.mob_gate = Math.max(...answered);
 }
 
-/* ---------- citation tooltip (cherry-pick #4) ---------- */
-/* First pass scoped to breed-risk/watchFor content only, not blanket
-   per-question coverage (narrowed during plan review). A real focusable
-   <button>, not a bare title-attribute hover - the design review flagged
-   that as unreachable by keyboard/screen-reader. Click-toggled on both
-   desktop and mobile (no separate hover-only affordance to diverge between
-   them); aria-describedby links the trigger to its popover for screen
-   readers. */
-function citationBadgeHtml(sourceIds, sources){
-  const list = (sourceIds || []).map(id => (sources || []).find(s => s.id === id)).filter(Boolean);
-  if (!list.length) return "";
-  const uid = "cite-" + list.map(s=>s.id).join("-").replace(/[^a-z0-9-]/gi, "");
-  const items = list.map(s => `<li><a href="${s.url}" target="_blank" rel="noopener">${s.title}</a> (${s.author}, ${s.year})</li>`).join("");
-  return ` <button type="button" class="pv-cite-btn" aria-describedby="${uid}" data-cite-toggle="${uid}">Source${list.length>1?"s":""}</button>` +
-    `<ul class="pv-cite-pop" id="${uid}" hidden>${items}</ul>`;
-}
-// One delegated listener for every citation button on the page (registered
-// once, not per-render() call, since render() replaces app.innerHTML wholesale
-// and would otherwise pile up duplicate listeners on document).
-document.addEventListener("click", e => {
-  const trigger = e.target.closest("[data-cite-toggle]");
-  document.querySelectorAll(".pv-cite-pop").forEach(pop => {
-    if (trigger && pop.id === trigger.dataset.citeToggle) pop.hidden = !pop.hidden;
-    else if (!e.target.closest(".pv-cite-pop")) pop.hidden = true;
-  });
-});
-
-/* Matched breed-risk notes (from the active stage-species content module),
-   each rendered as watch-for text plus its citation badge if it has
-   sources. Shown once, on Round 1's "Watch out for" card (see
-   personalizedCategoryInsights below) - not repeated on every round, since
-   it's a stage-wide callout rather than a per-category one. */
-function matchedBreedRiskHtml(){
-  const content = activeStageContent();
-  if (!content) return [];
-  const b = state.baseline;
-  const notes = matchBreedRiskNotes(b.species, b.breed, weightKg(), content.breedRiskNotes);
-  return notes.map(n => n.text + citationBadgeHtml(n.sourceIds, content.sources));
-}
-
-/* Deep, always-expanded version of the above for Round 4/completion - same
-   matchBreedRiskNotes() call (no duplicated matching logic), richer
-   formatting. Mirrors the existing SYMPTOM_INFO short-label-vs-full-detail
-   split (see deepWatchList()/watchOutSectionHtml() below): Round 1-3 show
-   one short line capped at 3 total items; this shows every matched note in
-   full, each with an explicit breed/tag header and its sources rendered
-   inline rather than behind a toggle - "the final page" gets the deeper
-   read, not a repeat of the short version. */
+/* Breed-risk tag -> short display label, used by guideBreedNotesHtml() below
+   (the "cherry-pick #4" citation-popover version and the separate
+   Round-1-only/Round-4+Completion split were retired 2026-07-20 once both
+   dog and cat guides existed - Aito/Miso are now the single breed-content
+   surface for both species; see the README's Aito/Miso section). */
 const BREED_RISK_TAG_LABEL = {
   brachycephalic:"Flat-faced breed risk", chondrodystrophic:"Spinal-disc breed risk",
   giant:"Giant-breed risk", generic:"Stage-specific risk",
 };
-function deepBreedRiskHtml(){
+
+// Aito/Miso's version of the same content, whichever guide matches this
+// pet's species - shown on Results 1-4 + Completion for both dogs and cats
+// now (2026-07-20). This is now the single breed-content surface for both
+// species - see the (deleted) matchedBreedRiskHtml()/deepBreedRiskHtml()
+// note in the README's Aito/Miso section for what this replaced.
+function guideBreedNotesHtml(){
+  const b = state.baseline;
+  const cfg = GUIDE_CONFIG[b.species];
+  if (!cfg) return "";
   const content = activeStageContent();
   if (!content) return "";
-  const b = state.baseline;
   const notes = matchBreedRiskNotes(b.species, b.breed, weightKg(), content.breedRiskNotes);
   if (!notes.length) return "";
-  return `<div class="pv-card">
-    <div class="pv-insight-title">Breed & stage watch-out${notes.length>1?"s":""}</div>
-    ${notes.map((n,idx)=>{
-      const sources = (n.sourceIds||[]).map(id=>(content.sources||[]).find(s=>s.id===id)).filter(Boolean);
-      return `<div${idx>0?' class="pv-divider"':''}>
-        <div style="font-weight:500;margin-bottom:4px;">${BREED_RISK_TAG_LABEL[n.tags[0]] || "Watch out for"}</div>
-        <p class="pv-hint" style="margin:0 0 6px;">${n.text}</p>
-        ${sources.length ? `<p class="pv-hint" style="margin:0;color:var(--pv-muted);"><strong>Source${sources.length>1?"s":""}:</strong> ${sources.map(s=>`<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a> (${s.author}, ${s.year})`).join("; ")}</p>` : ""}
-      </div>`;
-    }).join("")}
-  </div>`;
-}
-
-/* ---------- stage-confirm moment (cherry-pick #5) ---------- */
-/* Zero-extra-click: folded into the existing BCS step (the first screen
-   after baseline, once species/breed/age/weight are known) as a badge +
-   one-liner, rather than its own wizard step - the user explicitly flagged
-   retention/streamlined-completion risk, so this must not add a screen.
-   Reuses STAGE_ICON/stageLabelText already built for the result page, so
-   the wording is consistent rather than a second, divergent copy of the
-   same idea. */
-function stageReasonText(stageDisplay, b){
-  if (stageDisplay === "senior" && b.species === "dog" && dogSizeClass(weightKg()) === "giant"){
-    return "giant breeds reach this stage earlier than smaller dogs";
-  }
-  const tags = petBreedTags(b.species, b.breed, weightKg());
-  if (tags.includes("brachycephalic")) return "flat-faced breeds carry some breed-typical traits worth watching from now on";
-  if (tags.includes("chondrodystrophic")) return "this breed type carries a breed-typical spinal-disc risk worth watching from now on";
-  return null;
-}
-function stageConfirmHtml(){
-  const b = state.baseline;
-  const { years: age } = computeFinalAge();
-  const stageDisplay = lifeStageDisplay(b.species, age, weightKg());
-  const stageText = stageLabelText(stageDisplay, b.species);
-  const reason = stageReasonText(stageDisplay, b);
-  const name = b.name || "Your pet";
-  return `<div class="pv-badge">${STAGE_ICON[stageDisplay]} ${stageText} stage</div>
-    <p class="pv-hint">${name} is in the ${stageText.toLowerCase()} stage${reason ? " - " + reason : ""}. That's why the questions ahead are tailored to this stage.</p>`;
+  const notesHtml = notes.map((n,idx)=>{
+    const sources = (n.sourceIds||[]).map(id=>(content.sources||[]).find(s=>s.id===id)).filter(Boolean);
+    return `<div${idx>0?' style="margin-top:10px;padding-top:10px;border-top:1px solid var(--pv-ash);"':''}>
+      <div style="font-weight:600;margin-bottom:3px;">${BREED_RISK_TAG_LABEL[n.tags[0]] || "Watch out for"}</div>
+      <p style="margin:0 0 4px;">${n.text}</p>
+      ${sources.length ? `<p style="margin:0;color:var(--pv-muted);font-size:12px;"><strong>Source${sources.length>1?"s":""}:</strong> ${sources.map(s=>`<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a> (${s.author}, ${s.year})`).join("; ")}</p>` : ""}
+    </div>`;
+  }).join("");
+  return guideHtml(cfg, `<p><span class="pv-guide-name">${cfg.name} says:</span> Here's what's worth knowing about ${b.breed || "this breed"}:</p>${notesHtml}`);
 }
 
 /* Raw 0-1 deficit mean for one category - the same number longevityScore()
@@ -887,7 +836,6 @@ const PV_WIDGET_HTML = `
   </div>
 
   <div class="pv-body">
-    <p class="pv-eyebrow">A Whoop for the whole household</p>
     <h2 class="pv-headline">Build your pet's vitals baseline</h2>
 
     <div class="pv-grid">
@@ -1069,8 +1017,17 @@ function wirePetVitalsToState(root){
       btn.title = b.species === "cat" ? btn.dataset.titleCat : btn.dataset.titleDog;
     });
   }
-  if (typeDog) typeDog.addEventListener("click", ()=>{ b.species = "dog"; syncActivityTitles(); });
-  if (typeCat) typeCat.addEventListener("click", ()=>{ b.species = "cat"; syncActivityTitles(); });
+  // Toggling species here does NOT call render() (this whole widget updates
+  // itself in place, not via the app-level render() cycle) - so unlike every
+  // other page, Aito's visibility here would go stale mid-page without this
+  // explicit refresh. Every other guideForStep() call site is reached via a
+  // real render(), where species is always fresh automatically.
+  function syncGuideSlot(){
+    const slot = document.getElementById("pv-guide-slot");
+    if (slot) slot.innerHTML = guideForStep("baseline");
+  }
+  if (typeDog) typeDog.addEventListener("click", ()=>{ b.species = "dog"; syncActivityTitles(); syncGuideSlot(); });
+  if (typeCat) typeCat.addEventListener("click", ()=>{ b.species = "cat"; syncActivityTitles(); syncGuideSlot(); });
   syncActivityTitles(); // default species is "dog" until the owner picks otherwise
 
   const nameEl = root.querySelector('[data-pv="name"]');
@@ -1207,7 +1164,6 @@ function applyPathPreset(preset){
   Object.assign(state.baseline, {
     species: preset.species, name:"", breed: preset.breed,
     weightValue: preset.weightLb, weightUnit:"lb",
-    sexNeuter:"male-neutered",
     dobKnown:false, dobMonth:"", dobDay:"", dobYear:"", yearsOnlyAge: String(preset.age),
     bcs:5, photoFile:null, photoEstimate:null, bcsSkippedByPhoto:false, healthGoals:[],
   });
@@ -1220,7 +1176,6 @@ function applyPathPreset(preset){
 
 function renderPathChooser(){
   const body = `
-    <p class="pv-eyebrow">A Whoop for the whole household</p>
     <h2 class="pv-headline">Try a survey path</h2>
     <p class="pv-hint">Each path pre-fills a representative pet for that life stage and breed, then goes straight into the same survey - same BCS step, same 4 rounds, same scoring, same dev breakdown. Only the questions and breed-risk content differ.</p>
     <div class="pv-grid">
@@ -1243,6 +1198,7 @@ function renderPathChooser(){
 function renderBaseline(){
   app.innerHTML = PV_WIDGET_HTML + `
     <div style="max-width:960px;margin:16px auto 0;">
+      <div id="pv-guide-slot">${guideForStep("baseline")}</div>
       <div class="pv-field" style="margin-bottom:12px;">
         <label for="pv-photo" class="pv-hint">Optional: upload a photo for an age estimate (experimental - doesn't replace the questions below)</label>
         <input type="file" id="pv-photo" accept="image/*">
@@ -1251,6 +1207,24 @@ function renderBaseline(){
       <div class="pv-field" style="margin-bottom:12px;">
         <label for="pv-meals" class="pv-hint">Meals per day</label>
         <input type="number" id="pv-meals" min="1" step="1" value="${state.followup.mealsPerDay}">
+      </div>
+      <div class="pv-field" style="margin-bottom:12px;">
+        <label for="pv-sex-neuter" class="pv-hint">Sex / neuter status</label>
+        <select id="pv-sex-neuter">
+          <option value="unknown"${state.baseline.sexNeuter==="unknown"?" selected":""}>Prefer not to say / unknown</option>
+          <option value="male-intact"${state.baseline.sexNeuter==="male-intact"?" selected":""}>Male, intact</option>
+          <option value="male-neutered"${state.baseline.sexNeuter==="male-neutered"?" selected":""}>Male, neutered</option>
+          <option value="female-intact"${state.baseline.sexNeuter==="female-intact"?" selected":""}>Female, intact</option>
+          <option value="female-spayed"${state.baseline.sexNeuter==="female-spayed"?" selected":""}>Female, spayed</option>
+        </select>
+      </div>
+      <div class="pv-field" style="margin-bottom:12px;">
+        <label for="pv-weight-goal" class="pv-hint">Weight goal</label>
+        <select id="pv-weight-goal">
+          <option value="lose"${state.baseline.weightGoal==="lose"?" selected":""}>Lose weight</option>
+          <option value="maintain"${state.baseline.weightGoal==="maintain"?" selected":""}>Maintain current weight</option>
+          <option value="gain"${state.baseline.weightGoal==="gain"?" selected":""}>Gain weight</option>
+        </select>
       </div>
     </div>
     <div class="pv-footer">${wizNavHTML("baseline", "Continue to body condition check")}</div>
@@ -1269,6 +1243,8 @@ function renderBaseline(){
   };
 
   document.getElementById("pv-meals").oninput = e=>{ state.followup.mealsPerDay = e.target.value; };
+  document.getElementById("pv-sex-neuter").onchange = e=>{ state.baseline.sexNeuter = e.target.value; };
+  document.getElementById("pv-weight-goal").onchange = e=>{ state.baseline.weightGoal = e.target.value; };
 
   document.getElementById("wiz-next").onclick = async ()=>{
     const b = state.baseline;
@@ -1317,8 +1293,8 @@ function renderPuppyKitten(){
   const content = activeBondingContent();
   const label = b.species === "cat" ? "Kitten" : "Puppy";
   const body = `
-    <p class="pv-eyebrow">A Whoop for the whole household</p>
     <div class="pv-badge">🍼 ${label} stage</div>
+    ${guideForStep("puppykitten")}
     <h2 class="pv-headline">${name} is still very young</h2>
     <p class="pv-hint">At this age, real health data is unreliable and a clinical-style score wouldn't mean much yet - so instead of a Longevity Score, let's focus on bonding, socialization, and the habits that set them up well for life. Pawl will have a full Longevity Score ready once ${name} is old enough for it to mean something.</p>
     <div class="pv-grid">
@@ -1353,6 +1329,7 @@ function renderPuppyKittenSummary(){
     .filter(Boolean);
   const body = `
     <div class="pv-badge">Check-in complete</div>
+    ${guideForStep("puppykittensummary")}
     <h2 class="pv-headline">${name}'s early bonding check-in</h2>
     <p class="pv-hint">This isn't a score - just a few things worth keeping in mind while ${name} is still young.</p>
     <div class="pv-card">
@@ -1366,14 +1343,30 @@ function renderPuppyKittenSummary(){
   document.getElementById("wiz-next").onclick = ()=>{ state.step = "baseline"; render(); };
 }
 
+// Informational only, not a scoring input - flags the two genuine
+// contradictions between owner-stated weight-goal intent and the BCS
+// reading (see README's weight-goal reconciliation note). A goal that
+// simply doesn't match "maintain" at an ideal BCS isn't a contradiction
+// (a working/senior dog may have a real reason to bulk up or trim down),
+// so this only fires on the two cases that actually conflict.
+function weightGoalReconciliationNote(bcs, weightGoal, name){
+  if (weightGoal === "lose" && bcs <= 3){
+    return `${name}'s body condition currently reads underweight, but the weight goal is set to "lose weight" - worth checking with your vet before restricting food further.`;
+  }
+  if (weightGoal === "gain" && bcs >= 7){
+    return `${name}'s body condition currently reads overweight, but the weight goal is set to "gain weight" - worth checking with your vet before increasing food.`;
+  }
+  return null;
+}
+
 function renderBCS(){
   const b = state.baseline;
   const chart = BCS_CHART[b.species];
   const cur = chart.find(c=>c.bcs===b.bcs) || chart[4];
   const name = b.name || "your pet";
+  const goalNote = weightGoalReconciliationNote(b.bcs, b.weightGoal, name);
   const body = `
-    <p class="pv-eyebrow">A Whoop for the whole household</p>
-    ${stageConfirmHtml()}
+    ${guideForStep("bcs")}
     <h2 class="pv-headline">How's ${name}'s body condition?</h2>
     <p class="pv-hint">Compare against the chart below - ribs, waist, and profile are the tells, not the scale.</p>
     <div class="pv-card pv-card-center" data-img-hook="${cur.imageHook}">
@@ -1388,6 +1381,7 @@ function renderBCS(){
       <div class="pv-slider-value" style="font-size:22px;">${b.bcs} - ${cur.label}</div>
       <p class="pv-hint" style="margin-top:6px;">${cur.desc}</p>
     </div>
+    ${goalNote ? `<p class="pv-italic-note">${goalNote}</p>` : ""}
   `;
   const footer = wizNavHTML("bcs", "Continue");
   app.innerHTML = pvShell("Body Condition", "bcs", body, footer);
@@ -1404,6 +1398,55 @@ function renderBCS(){
   logDecision("p1_bcs", {category:"body", label:"Body condition", selectedLabel: `${state.baseline.bcs} - ${cur.label}`, score: state.answers.p1_bcs});
   wireWizBack("bcs");
   document.getElementById("wiz-next").onclick = ()=>{ state.step="part1"; render(); };
+}
+
+/* ---------- Aito & Miso, the guides (2026-07-20, direct request) ---------- */
+/* One guide per species, threaded through nearly every page. Icons are the
+   user's own real illustrations (assets/aito-dog.svg, assets/miso-cat.svg,
+   hand-drawn stroke style) referenced via plain <img>, same pattern this app
+   already uses for the local BCS chart images - not inline SVG strings.
+   GUIDE_CONFIG is the one place species maps to a name/icon - change it to
+   rename or re-skin either guide. */
+const GUIDE_CONFIG = {
+  dog: {name: "Aito", icon: '<img src="assets/aito-dog.svg" alt="Aito, your dog guide">'},
+  cat: {name: "Miso", icon: '<img src="assets/miso-cat.svg" alt="Miso, your cat guide">'},
+};
+
+// One guide instance, any inner HTML (a short <p> most places, the fuller
+// breed-notes markup on Results/Completion - .pv-guide-text holds either).
+function guideHtml(cfg, innerHtml){
+  return `<div class="pv-guide"><span class="pv-guide-icon">${cfg.icon}</span><div class="pv-guide-text">${innerHtml}</div></div>`;
+}
+
+// Static, non-breed copy per step - species-neutral wording (takes the
+// guide's own name as a parameter) since both dog and cat guides use the
+// same lines. Results/complete are handled separately (dynamic breed
+// content, see guideBreedNotesHtml() near BREED_RISK_TAG_LABEL below).
+const STEP_GUIDE_COPY = {
+  baseline: (name, guideName) => `<p><span class="pv-guide-name">${guideName} says:</span> Hi, I'm ${guideName}! I'll be here throughout ${name}'s check-up, and I'll point out anything worth knowing about their breed once we get to results.</p>`,
+  puppykitten: (name, guideName) => `<p><span class="pv-guide-name">${guideName} says:</span> ${name} is still young, so we're keeping this light - just a few check-in questions, no scoring yet.</p>`,
+  puppykittensummary: (name, guideName) => `<p><span class="pv-guide-name">${guideName} says:</span> Nice work getting to know ${name} a bit better today.</p>`,
+  bcs: (name, guideName) => `<p><span class="pv-guide-name">${guideName} says:</span> Take your time comparing ${name} to the chart - ribs and waistline are more reliable than the number on a scale.</p>`,
+};
+
+// GUIDE_CONFIG[state.baseline.species] is the ONLY gate for the whole
+// feature, and it lives here, once - every render function below calls this
+// unconditionally with no species check of its own (a deliberate exception
+// to this codebase's usual "inline check at every call site" convention,
+// justified because this is one feature threaded through ~9 render
+// functions, not an ad hoc per-field difference like FOOD_TYPE_HINT
+// elsewhere in this file). Puppy/kitten (species known, age <1yr) get the
+// matching species' guide too - GUIDE_CONFIG is keyed by species, not stage.
+function guideForStep(step){
+  const b = state.baseline;
+  const cfg = GUIDE_CONFIG[b.species];
+  if (!cfg) return "";
+  const name = b.name || "your pet";
+  if (step.startsWith("part") && PART_META[step]){
+    return guideHtml(cfg, `<p><span class="pv-guide-name">${cfg.name} says:</span> ${WHY_ROUND_MATTERS[PART_META[step].key]}</p>`);
+  }
+  const copyFn = STEP_GUIDE_COPY[step];
+  return copyFn ? guideHtml(cfg, copyFn(name, cfg.name)) : "";
 }
 
 /* No static `.items` here on purpose - which questions belong to each round
@@ -1438,8 +1481,8 @@ function visibleItems(items){
 // including the photo-upload BCS skip (see renderBaseline's #wiz-next).
 // null means "no Back target" (the first step).
 function prevStepFor(step){
-  if (step === "baseline") return null; // real first step now - no Back target
-  if (step === "pathchooser") return "devbreakdown"; // hidden dev shortcut, only reachable from the dev breakdown page
+  if (step === "baseline") return "pathchooser"; // reached either via pathchooser's "manual" link or puppy/kitten's own Back
+  if (step === "pathchooser") return null; // real first step again
   if (step === "puppykitten") return "baseline";
   if (step === "puppykittensummary") return "puppykitten";
   if (step === "bcs") return "baseline";
@@ -1451,7 +1494,20 @@ function prevStepFor(step){
   if (step === "result3") return "part3";
   if (step === "part4") return "result3";
   if (step === "result4") return "part4";
+  if (step === "complete") return "result4";
+  if (step === "devbreakdown") return state.devBreakdownReturnTo || "complete";
   return null;
+}
+
+// Back-only footer (right-aligned, same pv-wiz-nav styling as wizNavHTML) for
+// leaf-ish pages that have no meaningful "Next" - Completion and the Dev
+// Breakdown view. Reuses wireWizBack()/prevStepFor() unchanged.
+function backOnlyNavHTML(step, label){
+  const prev = prevStepFor(step);
+  return `
+    <div class="pv-wiz-nav">
+      <button type="button" class="pv-pill-btn pv-ghost" id="wiz-back" ${prev ? "" : 'disabled style="visibility:hidden;"'}>${label || "Back"}</button>
+    </div>`;
 }
 
 // Shared Back+Next footer group, right-aligned - the wizard's consistent
@@ -1475,14 +1531,34 @@ function renderPart(key){
   const meta = PART_META[key];
   const parts = assembleActiveParts();
   const items = visibleItems(parts[key]);
+  // Round 4 only: an optional, never-scored free-text concern field,
+  // separate from the scored p4_owner_concern scale question above - only
+  // shown once the medical-history gate is answered "yes", same
+  // gate-hides-rest convention as every other Round 4 detail question.
+  const showConcernText = key === "part4" && (state.answers.p4_gate ?? 0) >= 0.5;
+  const concernBlock = !showConcernText ? "" : `
+    <div class="pv-card">
+      <label for="pv-concern-text" class="pv-hint">In your own words - anything else worrying you? (optional, not scored)</label>
+      <textarea id="pv-concern-text" rows="3" placeholder="e.g. she's been more clingy at night and I'm not sure why">${state.concern.text}</textarea>
+      <button type="button" class="pv-pill-btn pv-small" id="pv-concern-analyze" style="margin-top:8px;">Get AI summary</button>
+      <div id="pv-concern-status" class="pv-hint"></div>
+      ${state.concern.status && !["ok","empty"].includes(state.concern.status) ? `<p class="pv-hint">AI summary unavailable right now - your notes are saved either way.</p>` : ""}
+      ${state.concern.status === "ok" && !state.concern.highlights.length ? `<p class="pv-hint">No specific concerns flagged in what you wrote.</p>` : ""}
+      ${state.concern.highlights.length ? `<ul>${state.concern.highlights.map(h=>`<li>${h}</li>`).join("")}</ul>` : ""}
+    </div>`;
+  // Dog paths: Aito delivers this same WHY_ROUND_MATTERS line inside his
+  // guide bubble instead of a plain paragraph (see guideForStep()) - cat
+  // paths (no guide) keep the original plain-paragraph version, so the copy
+  // is never lost, just re-wrapped where the guide exists.
+  const guideBlock = guideForStep(key);
   const body = `
-    <p class="pv-eyebrow">A Whoop for the whole household</p>
     <h2 class="pv-headline">${meta.title}</h2>
-    <p class="pv-hint">${WHY_ROUND_MATTERS[meta.key]}</p>
+    ${guideBlock || `<p class="pv-hint">${WHY_ROUND_MATTERS[meta.key]}</p>`}
     <p class="pv-hint">${meta.num===1 ? "Answer what you can - skip anything you're unsure of." : "Every extra answer sharpens the estimate."}</p>
     <div class="pv-grid">
       ${items.map(q => questionBlock(q, q.opts)).join("")}
     </div>
+    ${concernBlock}
   `;
   const footer = wizNavHTML(key, `See ${meta.num===1?"my estimate":"the sharpened estimate"}`);
   app.innerHTML = pvShell(meta.title, key, body, footer);
@@ -1531,6 +1607,20 @@ function renderPart(key){
       if (hint){ hint.textContent = g.text; hint.style.color = g.caution ? "var(--pv-warn)" : ""; }
     };
   });
+  const concernTextEl = document.getElementById("pv-concern-text");
+  if (concernTextEl){
+    // No render() on input - same reason as the minutes-input/f-name fields
+    // above, re-rendering would blow away the cursor mid-typing.
+    concernTextEl.oninput = ()=>{ state.concern.text = concernTextEl.value; };
+    document.getElementById("pv-concern-analyze").onclick = async ()=>{
+      const statusEl = document.getElementById("pv-concern-status");
+      statusEl.textContent = "Analyzing...";
+      const result = await PawlConcernAnalyzer.analyzeConcern(state.concern.text, {species: state.baseline.species});
+      state.concern.highlights = result.highlights;
+      state.concern.status = result.status;
+      render();
+    };
+  }
   wireWizBack(key);
   document.getElementById("wiz-next").onclick = ()=>{ state.step = "result"+meta.num; render(); };
 }
@@ -1544,13 +1634,6 @@ function deltaCopy(delta, chronAge, category){
   const dir = category === "slower" ? "slower" : "faster";
   const tone = category === "slower" ? "nice work." : "nothing urgent, just a good nudge to keep supporting them.";
   return `Aging about ${pct}% ${dir} than typical for their age - ${tone}`;
-}
-
-const STAGE_ICON = {puppy:"🍼", young:"⚡", middle:"🌿", senior:"🍂"};
-
-function stageLabelText(stage, species){
-  if (stage === "puppy") return species === "cat" ? "Kitten" : "Puppy";
-  return {young:"Young", middle:"Middle-aged", senior:"Senior"}[stage];
 }
 
 const STAGE_EXPLAIN = {
@@ -1716,11 +1799,10 @@ function mobilityBestMatch(r){
 }
 function sensesBestMatch(r){
   const b = state.baseline;
-  const stageText = stageLabelText(r.stageDisplay, b.species).toLowerCase();
   if (b.healthGoals && b.healthGoals.includes("anxiety")) return `Since anxiety/stress is one of the goals you flagged, a predictable routine and consistent environment is usually the best match here - more so than for a pet without that goal.`;
-  if (r.stageDisplay === "senior") return `At the senior stage, a predictable daily routine is usually the better match for easing sensory or cognitive stress - more so than it would be for a younger pet.`;
-  if (r.stageDisplay === "puppy") return `This early stage is the best window for positive socialization and varied exposure - it matters more now than it will later.`;
-  return `At the ${stageText} stage, keeping a consistent routine now is a good match, ahead of any sensory changes that might show up later.`;
+  if (r.stageDisplay === "senior") return `A predictable daily routine tends to help most with easing sensory or cognitive stress as pets get older.`;
+  if (r.stageDisplay === "puppy") return `This early window is the best time for positive socialization and varied exposure - it matters more now than it will later.`;
+  return `Keeping a consistent routine now is a good match, ahead of any sensory changes that might show up later.`;
 }
 function bodyBestMatch(r){
   const b = state.baseline;
@@ -1745,10 +1827,11 @@ const CATEGORY_BEST_MATCH = {mobility: mobilityBestMatch, senses: sensesBestMatc
 function personalizedCategoryInsights(r, meta, partNumber){
   const cc = CATEGORY_CONTENT[meta.key];
   let watchFor = flaggedWatchFor(partNumber, cc.watchFor);
-  // Matched breed-risk notes (cherry-pick #1/#4) shown once, on Round 1 only -
-  // a stage-wide callout, not a per-category one, so it doesn't repeat on
-  // every round's card. Takes priority over the flagged-symptom list below.
-  if (partNumber === 1) watchFor = [...matchedBreedRiskHtml(), ...watchFor].slice(0,3);
+  // Breed-risk notes used to be folded into Round 1's watchFor here
+  // (cherry-pick #1/#4) - moved entirely to Aito/Miso's own guide bubble on
+  // every result round for both species (2026-07-20, see
+  // guideBreedNotesHtml()), so Round 1 keeps its full 3 flagged-symptom
+  // slots instead of sharing them with breed content.
   let recommendations = [CATEGORY_BEST_MATCH[meta.key](r), ...cc.recommendations].slice(0,3);
   if (r.zone.vet) watchFor = ["A few of today's answers are worth flagging to your vet soon", ...watchFor].slice(0,3);
   if (meta.key === "body" && r.overweightPct != null) recommendations = ["Body condition is the highest-impact lever right now - small portion and activity changes add up fast", ...recommendations].slice(0,3);
@@ -1807,34 +1890,60 @@ function scoreRingColor(score){
 // score stays available as plain text (still shown here, and on that
 // round's own result card/ring) - only the bar's WIDTH/COLOR stopped being
 // score-driven, per product direction.
-function decisionChartHTML(partNumber, r, catScore){
-  const bars = [];
-  for (let p=1; p<=4; p++){
+/* Age-trend chart - replaces the old round-completion bar system (2026-07-20,
+   direct request). Plots only rounds actually reached so far (1..partNumber,
+   the loop bound is never higher than the current round - there is no future
+   round to show), never a "not yet reached" placeholder. A dashed reference
+   line marks chronological age so the projected-age line's meaning (above or
+   below "normal for their age") is visible at a glance, not just implied. */
+// Plain-language stand-in for reading the line's slope - so understanding
+// "did it go up or down" never depends on being able to read a chart at all.
+function ageTrendTakeaway(points){
+  if (points.length < 2) return `First estimate logged.`;
+  const diff = points[points.length-1].age - points[points.length-2].age;
+  if (Math.abs(diff) < 0.05) return `About the same as last round.`;
+  return diff > 0 ? `A little older than last round's estimate.` : `A little younger than last round's estimate.`;
+}
+function ageTrendChartHTML(partNumber, r){
+  const points = [];
+  for (let p=1; p<=partNumber; p++){
     const snap = state.resultHistory[p];
-    const isCurrent = p === partNumber;
-    const label = snap ? `Round ${p}${isCurrent ? " (current)" : ""} - ${snap.score}/100` : `Round ${p} - not yet reached`;
-    bars.push(`
-      <div class="pv-field" style="margin-bottom:${p===4?0:10}px;">
-        <div class="pv-bar-copy" style="margin:0 0 4px;">${label}</div>
-        <div class="pv-bar${isCurrent ? " pv-current" : ""}"><div class="pv-bar-fill" style="width:${snap?100:0}%;background:var(--pv-blue);"></div></div>
-      </div>`);
+    if (snap && snap.center != null) points.push({round:p, age:snap.center});
   }
-  const prev = state.resultHistory[partNumber-1];
-  let trendText;
-  if (!prev){
-    trendText = "First checkpoint logged.";
-  } else {
-    const diff = r.score - prev.score;
-    if (diff === 0) trendText = "Held steady this round.";
-    else if (diff > 0) trendText = `Ticked up ${diff} point${diff===1?"":"s"} this round.`;
-    else trendText = `Ticked down ${Math.abs(diff)} point${diff===-1?"":"s"} this round.`;
-  }
+  if (!points.length) return "";
+  const chronAge = r.chronAge;
+  const ages = points.map(pt=>pt.age).concat([chronAge]);
+  const minAge = Math.min(...ages), maxAge = Math.max(...ages);
+  const pad = Math.max(0.5, (maxAge-minAge)*0.2);
+  const yMin = Math.max(0, minAge-pad), yMax = maxAge+pad;
+  // Extra top/bottom margin (vs. the original version) makes room to print
+  // the actual age number above every dot - the point is that no one has to
+  // infer a value from dot height on an unlabeled axis, the number is just
+  // printed right there.
+  const W=280, H=140, mX=26, mTop=24, mBottom=18, plotH=H-mTop-mBottom;
+  const xFor = i => mX + (points.length===1 ? (W-mX*2)/2 : (i/(points.length-1))*(W-mX*2));
+  const yFor = age => mTop + plotH - ((age-yMin)/(yMax-yMin))*plotH;
+  const pathD = points.map((pt,i)=> `${i===0?"M":"L"}${xFor(i).toFixed(1)},${yFor(pt.age).toFixed(1)}`).join(" ");
+  const chronY = yFor(chronAge).toFixed(1);
+  const dots = points.map((pt,i)=> `<circle cx="${xFor(i).toFixed(1)}" cy="${yFor(pt.age).toFixed(1)}" r="4" fill="var(--pv-blue)"></circle>`).join("");
+  const valueLabels = points.map((pt,i)=> `<text x="${xFor(i).toFixed(1)}" y="${(yFor(pt.age)-9).toFixed(1)}" font-size="11" font-weight="600" text-anchor="middle" fill="var(--pv-blue)">${pt.age.toFixed(1)}</text>`).join("");
+  const roundLabels = points.map((pt,i)=> `<text x="${xFor(i).toFixed(1)}" y="${H-4}" font-size="10" text-anchor="middle" fill="var(--pv-muted)">Round ${pt.round}</text>`).join("");
+  const name = state.baseline.name || "your pet";
   return `
     <div class="pv-card">
-      <div class="pv-insight-title">Your pet's picture so far</div>
-      ${bars.join("")}
-      <p class="pv-hint" style="margin-top:10px;">${trendText}${catScore != null ? ` This round scored ${catScore}/100 on its own.` : ""}</p>
-      <p class="pv-hint" style="margin:4px 0 0;">Built from ${r.n} answer${r.n===1?"":"s"} across ${partNumber} round${partNumber===1?"":"s"} so far.</p>
+      <div class="pv-insight-title">${name}'s age estimate so far</div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;max-width:320px;display:block;margin:0 auto;">
+        <line x1="${mX}" y1="${chronY}" x2="${W-mX}" y2="${chronY}" stroke="var(--pv-ash)" stroke-width="1.5" stroke-dasharray="3,3"></line>
+        <path d="${pathD}" fill="none" stroke="var(--pv-blue)" stroke-width="2"></path>
+        ${dots}
+        ${valueLabels}
+        ${roundLabels}
+      </svg>
+      <p class="pv-tone" style="text-align:center;margin:6px 0 0;">${ageTrendTakeaway(points)}</p>
+      <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--pv-muted);">
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--pv-blue);margin-right:5px;vertical-align:middle;"></span>${name}'s estimated age (in years)</span>
+        <span><span style="display:inline-block;width:14px;height:0;border-top:2px dashed var(--pv-muted);margin-right:5px;vertical-align:middle;"></span>${name}'s real age (${chronAge.toFixed(1)} yrs)</span>
+      </div>
     </div>`;
 }
 
@@ -1851,7 +1960,6 @@ function renderResult(partNumber){
   const ageDisplay = r.center < 1
     ? {value: Math.max(1, Math.round(r.center*12)), unit: " mo"}
     : {value: Math.round(r.center), unit: " yrs"};
-  const stageText = stageLabelText(r.stageDisplay, r.species);
   // Rounds 1-3 show that round's own category card; round 4 keeps the
   // life-stage card since it's the synthesized overall takeaway.
   const { watch, help } = isLast ? personalizedInsights(r) : {watch:null, help:null};
@@ -1868,13 +1976,13 @@ function renderResult(partNumber){
   // Snapshot this round's real, already-computed result so later rounds can
   // show a trend against it - not a new calculation, just caching what
   // computeResult()/categoryScore() already returned this render.
-  state.resultHistory[partNumber] = {score: r.score, catScore, n: r.n, timestamp: Date.now()};
+  state.resultHistory[partNumber] = {score: r.score, catScore, n: r.n, timestamp: Date.now(), center: r.center, chronAge: r.chronAge};
 
   const body = `
     ${r.zone.vet ? `<div class="pv-warn-banner">${name}'s answers suggest it's worth a check-in with your vet soon. This isn't a diagnosis - just a nudge to get eyes on it.</div>` : ""}
-    <div class="pv-badge">${STAGE_ICON[r.stageDisplay]} ${stageText} stage</div>
-    <h2 class="pv-headline">${name} is in the ${stageText} stage</h2>
+    <h2 class="pv-headline">${name}'s results</h2>
     <p class="pv-hint" style="max-width:440px;">${STAGE_EXPLAIN[r.stageDisplay]}</p>
+    ${guideBreedNotesHtml()}
 
     <div class="pv-stat-row">
       <div class="pv-stat-block">
@@ -1907,7 +2015,7 @@ function renderResult(partNumber){
     </div>
     ${r.species==="cat" ? `<p class="pv-italic-note">Feline estimate - the science here is still maturing, so this reads a touch less precise.</p>` : ""}
 
-    ${decisionChartHTML(partNumber, r, catScore)}
+    ${ageTrendChartHTML(partNumber, r)}
 
     ${isLast ? `
     <div class="pv-card">
@@ -1917,8 +2025,7 @@ function renderResult(partNumber){
     <div class="pv-card">
       <div class="pv-insight-title">What helps</div>
       <ul>${help.map(h=>`<li>${h}</li>`).join("")}</ul>
-    </div>
-    ${deepBreedRiskHtml()}` : `
+    </div>` : `
     <div class="pv-card">
       <div class="pv-insight-title">${meta.title} score</div>
       <div class="pv-bar"><div class="pv-bar-fill" style="width:${catScore ?? 0}%;background:${scoreRingColor(catScore ?? 0)};"></div></div>
@@ -1939,6 +2046,7 @@ function renderResult(partNumber){
     </div>`}
 
     <p class="pv-hint">This combines their age, body condition, and today's answers - it gets sharper with each round (${r.n} observations so far).</p>
+    <button type="button" class="pv-pill-btn pv-ghost pv-small" id="open-dev-breakdown">View full decision breakdown (developer)</button>
   `;
   const stepId = "result"+partNumber;
   const footer = isLast
@@ -1948,6 +2056,7 @@ function renderResult(partNumber){
   app.innerHTML = pvShell("Results", stepId, body, footer)
     + `<p class="pv-footnote">Wellness estimate only. Not a diagnosis or life-expectancy prediction.</p>`;
   wireWizBack(stepId);
+  document.getElementById("open-dev-breakdown").onclick = ()=>{ state.devBreakdownReturnTo = state.step; state.step="devbreakdown"; render(); };
   if (!isLast){
     document.getElementById("wiz-next").onclick = ()=>{ state.step="part"+nextPart; render(); };
     document.getElementById("stop-here").onclick = ()=>{ state.step="complete"; render(); };
@@ -1962,6 +2071,45 @@ function renderResult(partNumber){
    (see the "never a raw confidence percentage" product rule elsewhere in
    this file/README). Not part of the wizard step sequence - no ring, no
    Back/Next, just a single Close button back to result4. */
+// Visual bar-chart complement to the "Category rollups" table below - same
+// numbers, easier to scan at a glance than four rows of a table.
+function categoryChartHTML(){
+  const rows = Object.values(PART_META).map(meta => {
+    const sc = categoryScore(meta.num);
+    return `
+      <div class="pv-field" style="margin-bottom:10px;">
+        <div class="pv-bar-copy" style="margin:0 0 4px;">${meta.title} - ${sc != null ? sc+"/100" : "no data yet"}</div>
+        <div class="pv-bar"><div class="pv-bar-fill" style="width:${sc ?? 0}%;background:${scoreRingColor(sc ?? 0)};"></div></div>
+      </div>`;
+  }).join("");
+  return `<div class="pv-card"><div class="pv-insight-title">Category scores at a glance</div>${rows}</div>`;
+}
+
+// Explains the actual numbers behind "how age and breed affect the score"
+// for THIS pet's specific path - age component and breed modifier are two
+// separate terms summed into eFI (see estimatePhysiologicalAge() in
+// frailty-model.js), so this breaks that sum back apart rather than just
+// restating the combined eFI already shown in the Aggregation card below.
+function ageBreedExplanationHTML(r){
+  const b = state.baseline;
+  const ageOnlyFI = expectedFIContinuous(b.species, r.chronAge, weightKg());
+  const modAmount = breedModifier(b.breed);
+  const tags = petBreedTags(b.species, b.breed, weightKg());
+  const breedLine = modAmount > 0
+    ? `Breed adds <strong>+${modAmount.toFixed(3)}</strong> to the expected-FI bar (tagged ${tags.filter(t=>t!=="generic").join(", ") || "flagged"} - see Pet Profile above), raising the bar this pet's own answers need to clear before reading as "more than typical for this breed."`
+    : `No breed-risk modifier applies here - this breed/size wasn't matched to a brachycephalic, chondrodystrophic, or giant-size tag.`;
+  const sizeNote = b.species === "dog"
+    ? `Age pacing is also size-aware for dogs - senior onset shifts by size class (see Pet Profile's size category above), so two dogs of the same chronological age but different sizes can land in different life stages.`
+    : `Cat age pacing isn't size-stratified the way dog pacing is - senior onset is a flat age threshold, since no independent feline size/FI calibration exists yet (see README's calibration status notes).`;
+  return `
+    <div class="pv-card">
+      <div class="pv-insight-title">How age &amp; breed shape this pet's score</div>
+      <p class="pv-hint" style="margin:0 0 8px;">Age alone: at ${r.chronAge.toFixed(1)} yrs, the model expects a baseline deficit fraction of <strong>${ageOnlyFI.toFixed(3)}</strong> - interpolated along a continuous age curve, not a bracket jump between fixed ages.</p>
+      <p class="pv-hint" style="margin:0 0 8px;">${breedLine}</p>
+      <p class="pv-hint" style="margin:0;">Combined expected FI for this path: <strong>${r.eFI.toFixed(3)}</strong> (age component + breed modifier). ${sizeNote}</p>
+    </div>`;
+}
+
 function renderDevBreakdown(){
   const r = computeResult(4);
   const b = state.baseline;
@@ -2014,6 +2162,10 @@ function renderDevBreakdown(){
       <p class="pv-hint" style="margin:6px 0 0;">Matched breed tags (drive both scoring's breedModifier() and this pet's content selection): <strong>${tags.length ? tags.join(", ") : "none"}</strong></p>
     </div>
 
+    ${ageBreedExplanationHTML(r)}
+
+    ${ageTrendChartHTML(4, r)}
+
     <div class="pv-card">
       <div class="pv-insight-title">Decision trail</div>
       <div style="overflow-x:auto;">
@@ -2035,6 +2187,8 @@ function renderDevBreakdown(){
       <p class="pv-hint" style="margin-top:10px;">Categories are weighted equally: each answered category contributes one equal vote to the pooled observed FI below, regardless of how many questions it has - a category with 12 answered items and one with 5 count the same. There is no per-question numeric weight in this model.</p>
     </div>
 
+    ${categoryChartHTML()}
+
     <div class="pv-card">
       <div class="pv-insight-title">Aggregation</div>
       <p class="pv-hint" style="margin:0;">Observed FI: <strong>${r.observedFI.toFixed(3)}</strong> - Expected FI for this pet's age/breed/size: <strong>${r.eFI.toFixed(3)}</strong> - Health Multiplier (observed &divide; expected): <strong>${r.multiplier.toFixed(2)}x</strong></p>
@@ -2047,7 +2201,7 @@ function renderDevBreakdown(){
 
     <p class="pv-hint" style="text-align:center;margin-top:16px;"><a href="#" id="jump-to-preset">Jump to a preset pet (dev)</a> - quickly re-run any of the 6 life-stage x breed content cells without retyping baseline fields.</p>
   `;
-  const footer = `<button type="button" class="pv-pill-btn" id="close-dev-breakdown">Close</button>`;
+  const footer = backOnlyNavHTML("devbreakdown", "Back");
   app.innerHTML = `
     <section class="pv-root">
       <div class="pv-header">
@@ -2056,7 +2210,7 @@ function renderDevBreakdown(){
       <div class="pv-body">${body}</div>
       <div class="pv-footer">${footer}</div>
     </section>`;
-  document.getElementById("close-dev-breakdown").onclick = ()=>{ state.step="complete"; render(); };
+  wireWizBack("devbreakdown");
   document.getElementById("jump-to-preset").onclick = e=>{ e.preventDefault(); state.step="pathchooser"; render(); };
 }
 
@@ -2174,7 +2328,7 @@ function foodRecommendationHtml(r){
   const tags = foodRecommendationTags(r);
   const lines = FOOD_TAG_ORDER.filter(t => tags.has(t)).map(t => FOOD_TAG_COPY[t](b.species));
   const weightStr = b.weightUnit === "kg" ? `${Math.round(weightKg())} kg` : `${Math.round(weightKg()/KG_PER_LB)} lbs`;
-  const factors = [b.species, b.breed || null, weightStr, `${r.stageDisplay} stage`].filter(Boolean).join(", ");
+  const factors = [b.species, b.breed || null, weightStr].filter(Boolean).join(", ");
   return `<div class="pv-card">
     <div class="pv-insight-title">What to look for in their food</div>
     <p class="pv-hint" style="margin:0 0 10px;">Based on everything so far for ${name} - ${factors}, activity, body condition, and today's flagged answers:</p>
@@ -2314,12 +2468,13 @@ function renderComplete(){
 
     ${watchOutSectionHtml()}
 
-    ${deepBreedRiskHtml()}
+    ${guideBreedNotesHtml()}
 
     <p class="pv-hint">Let's keep setting this up over time - extra assessments can be added later without redoing this setup.</p>
   `;
-  app.innerHTML = pvShell("Profile", "complete", body, "")
+  app.innerHTML = pvShell("Profile", "complete", body, backOnlyNavHTML("complete", "Back to results"))
     + `<p class="pv-footnote">Wellness estimate only. Not a diagnosis or life-expectancy prediction.</p>`;
+  wireWizBack("complete");
 
   document.getElementById("f-exercise").oninput = e=>{
     state.followup.exerciseMinutes = e.target.value;
@@ -2338,7 +2493,7 @@ function renderComplete(){
     document.getElementById("wearable-status").textContent =
       "Wearable syncing isn't live yet - this button is ready for when it is. Everything above keeps working fine without it.";
   };
-  document.getElementById("open-dev-breakdown").onclick = ()=>{ state.step="devbreakdown"; render(); };
+  document.getElementById("open-dev-breakdown").onclick = ()=>{ state.devBreakdownReturnTo = state.step; state.step="devbreakdown"; render(); };
 }
 
 render();
