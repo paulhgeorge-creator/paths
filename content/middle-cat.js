@@ -51,6 +51,8 @@ const watchFor = [
   "Weight gain, especially if activity has quietly dropped",
 ];
 
+// Round-themed variants (mobility/senses/body/history) per tag - 2026-07-20,
+// same rationale as young-dog.js's breedRiskNotes header comment.
 const breedRiskNotes = [
   /* Tagged "generic" (not a breed tag) on purpose - Maine Coon isn't in any
      existing name-tag list (BRACHY_BREEDS/CHONDRODYSTROPHIC_BREEDS) and
@@ -61,16 +63,35 @@ const breedRiskNotes = [
      name-tags + dog giant weight-threshold were reviewed), this shows as
      this survey cell's own default framing for any middle-age cat, since
      Maine Coon is this whole cell's chosen exemplar. */
-  {tags:["generic"],
+  {tags:["generic"], round:"body",
     text:"Hypertrophic cardiomyopathy (HCM) is a real, well-documented risk in Maine Coons specifically (one study found a genetic marker only in Maine Coons among a large multi-breed sample), though HCM itself can occur in other breeds too. It's important to know this condition often shows no symptoms at all in its carriers - screening (echocardiogram or genetic test) matters far more than watching for symptoms, which is why this is framed as a screening-history question rather than a symptom checklist.",
     sourceIds:["hcm-mutation","hcm-age-prevalence"]},
-  {tags:["brachycephalic"],
+  {tags:["generic"], round:"mobility",
+    text:"Reduced energy or tiring more easily during play can be one of the only outward signs before HCM is advanced - unlike people, cats are excellent at masking illness and rarely show obvious breathlessness until quite late.",
+    sourceIds:[]},
+  {tags:["generic"], round:"senses",
+    text:"Hiding more, seeming withdrawn, or a real drop in normal play/interaction can be a genuine behavioral sign of heart strain in cats - easy to misread as just a personality shift rather than a physical one.",
+    sourceIds:[]},
+  {tags:["generic"], round:"history",
+    text:"The specific genetic mutation (MYBPC3-A31P) linked to Maine Coon HCM is real and testable - one study found it in roughly 41.5% of a Maine Coon population sampled, with carriers at about 9.9x the odds of developing HCM. Worth knowing: most carriers in that same study never actually developed clinical HCM (~7% did), so a positive test is a real risk flag to discuss with your vet, not a diagnosis on its own.",
+    sourceIds:["hcm-mutation"]},
+
+  {tags:["brachycephalic"], round:"body",
     text:"Brachycephalic-pattern cat breeds can still show breathing signs at this stage - noisy breathing or reduced heat tolerance is worth mentioning at a checkup even if it's been consistent for years.",
     sourceIds:[]},
-  // No separate plain "generic" fallback note here - the HCM note above is
-  // already tagged "generic" and serves as this cell's default framing for
-  // every middle-age cat (see its own comment), so a second filler note
-  // would just be redundant clutter in the Watch out for list.
+  {tags:["brachycephalic"], round:"mobility",
+    text:"Reluctance to keep playing, or needing to stop and rest sooner than expected, can be a practical sign of an airway working harder than it should - easy to write off as just being a lower-energy cat.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"senses",
+    text:"Sleep-disordered breathing - snoring with pauses, restless or interrupted sleep - is a well-recognized part of the same airway picture in flat-faced breeds, not just a nap-time quirk.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"history",
+    text:"Worth flagging to your vet before any sedation or anesthesia - flat-faced cats, like flat-faced dogs, are generally treated as a higher-caution anesthesia group because of the same airway anatomy, so it's worth having on record ahead of any procedure.",
+    sourceIds:[]},
+  // No separate plain "generic" fallback note here - the HCM notes above are
+  // already tagged "generic" and serve as this cell's default framing for
+  // every middle-age cat (see the comment above), so a second filler note
+  // per round would just be redundant clutter.
 ];
 
 return {species:"cat", stage:"middle", exemplarBreed:"Maine Coon", questions, watchFor, breedRiskNotes, sources};

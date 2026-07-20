@@ -542,9 +542,12 @@ function recomputeDerivedMobGate(){
    Round-1-only/Round-4+Completion split were retired 2026-07-20 once both
    dog and cat guides existed - Aito/Miso are now the single breed-content
    surface for both species; see the README's Aito/Miso section). */
+// "generic"-tagged notes deliberately have no label (2026-07-20, direct
+// request - removed "Stage-specific risk"): a real breed match still gets
+// its own descriptive label, a generic/no-match note just shows the text.
 const BREED_RISK_TAG_LABEL = {
   brachycephalic:"Flat-faced breed risk", chondrodystrophic:"Spinal-disc breed risk",
-  giant:"Giant-breed risk", generic:"Stage-specific risk",
+  giant:"Giant-breed risk",
 };
 
 // Aito/Miso's version of the same content, whichever guide matches this
@@ -552,18 +555,25 @@ const BREED_RISK_TAG_LABEL = {
 // now (2026-07-20). This is now the single breed-content surface for both
 // species - see the (deleted) matchedBreedRiskHtml()/deepBreedRiskHtml()
 // note in the README's Aito/Miso section for what this replaced.
-function guideBreedNotesHtml(){
+// roundKey ("mobility"/"senses"/"body"/"history", matching PART_META's own
+// keys) - 2026-07-20, direct request: each Results page used to show the
+// exact same breed-risk text 4 times in a row. Passing the current round's
+// key lets matchBreedRiskNotes() surface a different, round-themed variant
+// of the same underlying condition each time (e.g. BOAS's breathing signs
+// on Round 3, its sleep-disruption angle on Round 2, anesthesia-risk
+// consideration on Round 4) instead of repeating one fact four times.
+function guideBreedNotesHtml(roundKey){
   const b = state.baseline;
   const cfg = GUIDE_CONFIG[b.species];
   if (!cfg) return "";
   const content = activeStageContent();
   if (!content) return "";
-  const notes = matchBreedRiskNotes(b.species, b.breed, weightKg(), content.breedRiskNotes);
+  const notes = matchBreedRiskNotes(b.species, b.breed, weightKg(), content.breedRiskNotes, roundKey);
   if (!notes.length) return "";
   const notesHtml = notes.map((n,idx)=>{
     const sources = (n.sourceIds||[]).map(id=>(content.sources||[]).find(s=>s.id===id)).filter(Boolean);
     return `<div${idx>0?' style="margin-top:10px;padding-top:10px;border-top:1px solid var(--pv-ash);"':''}>
-      <div style="font-weight:600;margin-bottom:3px;">${BREED_RISK_TAG_LABEL[n.tags[0]] || "Watch out for"}</div>
+      ${BREED_RISK_TAG_LABEL[n.tags[0]] ? `<div style="font-weight:600;margin-bottom:3px;">${BREED_RISK_TAG_LABEL[n.tags[0]]}</div>` : ""}
       <p style="margin:0 0 4px;">${n.text}</p>
       ${sources.length ? `<p style="margin:0;color:var(--pv-muted);font-size:12px;"><strong>Source${sources.length>1?"s":""}:</strong> ${sources.map(s=>`<a href="${s.url}" target="_blank" rel="noopener">${s.title}</a> (${s.author}, ${s.year})`).join("; ")}</p>` : ""}
     </div>`;
@@ -2087,19 +2097,28 @@ function renderResult(partNumber){
         </div>
       </div>
       <div class="pv-hero-zone" style="color:${ringColor};">${r.zone.label}</div>
-      <div class="pv-hero-delta">${deltaCopy(r.delta, r.chronAge, r.deltaCategory)}</div>
+      <!-- Aging-percentage delta text (2026-07-20, direct request): only
+           shown on the final Results page (Round 4) - rounds 1-3 keep the
+           score/zone as the headline signal without also leading with a
+           percentage figure. Same deltaCopy()/r.delta data either way, just
+           gated on isLast rather than always shown. -->
+      ${isLast ? `<div class="pv-hero-delta">${deltaCopy(r.delta, r.chronAge, r.deltaCategory)}</div>` : ""}
     </div>
 
-    <div class="pv-stat-row" style="margin-bottom:14px;">
+    <!-- Pet/Human Age promoted (2026-07-20, direct request) - back to the
+         hero-scale stat-value size instead of the smaller demoted-stat
+         treatment, since with the aging percentage now hidden on rounds 1-3
+         these two numbers are the next most important thing on the page. -->
+    <div class="pv-stat-row" style="margin-bottom:20px;">
       <div class="pv-stat-block">
         <div class="pv-stat-label">Pet Age</div>
-        <div class="pv-stat-value" style="font-size:22px;">${ageDisplay.value}<span class="pv-unit">${ageDisplay.unit}</span></div>
+        <div class="pv-stat-value" style="font-size:clamp(32px,5vw,44px);">${ageDisplay.value}<span class="pv-unit">${ageDisplay.unit}</span></div>
         ${ageSoftener}
       </div>
       ${r.humanEq ? `
       <div class="pv-stat-block">
         <div class="pv-stat-label">Human Age</div>
-        <div class="pv-stat-value" style="font-size:22px;">${r.humanEq}<span class="pv-unit"> yrs</span></div>
+        <div class="pv-stat-value" style="font-size:clamp(32px,5vw,44px);">${r.humanEq}<span class="pv-unit"> yrs</span></div>
         <div class="pv-stat-note">What a human would be at the same biological stage - not ${name}'s real age</div>
       </div>` : ""}
     </div>
@@ -2109,7 +2128,7 @@ function renderResult(partNumber){
       ${r.species==="cat" ? `<p class="pv-italic-note" style="margin-top:0;">Feline estimate - the science here is still maturing, so this reads a touch less precise.</p>` : ""}
     </div>
 
-    ${guideBreedNotesHtml()}
+    ${guideBreedNotesHtml(meta.key)}
 
     ${ageTrendChartHTML(partNumber, r)}
 
@@ -2643,7 +2662,7 @@ function renderComplete(){
 
     ${watchOutSectionHtml()}
 
-    ${guideBreedNotesHtml()}
+    ${guideBreedNotesHtml("history")}
 
     <p class="pv-hint">Let's keep setting this up over time - extra assessments can be added later without redoing this setup.</p>
   `;

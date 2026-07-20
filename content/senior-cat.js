@@ -61,15 +61,39 @@ const watchFor = [
   "Getting \"stuck\" or seeming confused in familiar places",
 ];
 
+// Round-themed variants (mobility/senses/body/history) per tag - 2026-07-20,
+// same rationale as young-dog.js's breedRiskNotes header comment.
+// chondrodystrophic stays a single note (never actually matches any real
+// cat breed - see young-cat.js's comment on the same tag).
 const breedRiskNotes = [
-  {tags:["brachycephalic"],
+  {tags:["brachycephalic"], round:"body",
     text:"Flat-faced senior cats can see their breathing signs worsen with age as weight or muscle changes add extra strain on an already-narrowed airway.",
     sourceIds:[]},
+  {tags:["brachycephalic"], round:"mobility",
+    text:"Reluctance to keep playing, or needing to stop and rest sooner than expected, can be a practical sign of an airway working harder than it should - easy to write off as just normal senior slowing.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"senses",
+    text:"Sleep-disordered breathing - snoring with pauses, restless or interrupted sleep - is a well-recognized part of the same airway picture in flat-faced breeds, and can genuinely worsen with age alongside everything else.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"history",
+    text:"Worth flagging to your vet before any sedation or anesthesia - flat-faced cats are generally treated as a higher-caution anesthesia group because of the same airway anatomy, and senior cats already carry more anesthesia risk in general.",
+    sourceIds:[]},
+
   {tags:["chondrodystrophic"],
     text:"If applicable, sudden reluctance to jump or a hunched posture at any age is worth a same-day vet call rather than a wait-and-see.",
     sourceIds:[]},
-  {tags:["generic"],
+
+  {tags:["generic"], round:"body",
     text:"Chronic kidney disease and hyperthyroidism are the two most common senior-cat conditions overall - not tied to one specific breed - and often occur together. Unexplained weight loss or increased thirst/appetite is worth a vet visit regardless of breed.",
+    sourceIds:["hyperthyroid-ckd"]},
+  {tags:["generic"], round:"mobility",
+    text:"Reduced activity or general lethargy can come from kidney disease or an overactive thyroid, not just joint pain - worth distinguishing from the stiffness/jumping-difficulty signs the joint checklist above is tracking, since the cause (and treatment) is completely different.",
+    sourceIds:["hyperthyroid-ckd"]},
+  {tags:["generic"], round:"senses",
+    text:"Increased vocalization, restlessness, or general irritability is a real, commonly recognized sign of an overactive thyroid in senior cats - easy to mistake for a personality change rather than a physical one.",
+    sourceIds:[]},
+  {tags:["generic"], round:"history",
+    text:"Annual senior bloodwork (kidney values, thyroid/T4) is the real way these two conditions get caught early, since symptoms alone often show up only after real damage has occurred - if it's been a while, that's worth raising at the next visit.",
     sourceIds:["hyperthyroid-ckd"]},
 ];
 

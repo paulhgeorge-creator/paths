@@ -15,6 +15,9 @@
 const sources = [
   {id:"fgf4-chondro", title:"FGF4 retrogene insertion (12-FGF4RG) and disc calcification risk in chondrodystrophic breeds", author:"Reunanen VLJ et al.", year:2025, url:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12577395/"},
   {id:"oneill2023osa", title:"Dog breeds and conformations predisposed to osteosarcoma in the UK: a VetCompass study", author:"O'Neill DG et al.", year:2023, url:"https://pmc.ncbi.nlm.nih.gov/articles/PMC10294386/"},
+  {id:"gruenheid2018anesthesia", title:"Risk of anesthesia-related complications in brachycephalic dogs", author:"Gruenheid M et al.", year:2018, url:"https://pubmed.ncbi.nlm.nih.gov/30020004/"},
+  {id:"glickman2000gdv", title:"Multiple risk factors for the gastric dilatation-volvulus syndrome in dogs", author:"Glickman LT et al.", year:2000, url:"https://doi.org/10.2460/javma.2000.216.40"},
+  {id:"mayhew2004ivddrecurrence", title:"Risk factors for recurrence of clinical signs associated with thoracolumbar intervertebral disk herniation in dogs: 229 cases (1994-2000)", author:"Mayhew PD et al.", year:2004, url:"https://pubmed.ncbi.nlm.nih.gov/15521446/"},
 ];
 
 const questions = [
@@ -57,18 +60,60 @@ const breedConditionalQuestions = [
   ]},
 ];
 
+// Round-themed variants (mobility/senses/body/history) per tag - 2026-07-20,
+// same rationale as young-dog.js's breedRiskNotes header comment: a
+// genuinely different real fact per Results page instead of one repeated.
 const breedRiskNotes = [
-  {tags:["chondrodystrophic"],
+  {tags:["chondrodystrophic"], round:"mobility",
     text:"Dachshunds and other chondrodystrophic breeds (Corgis, Basset Hounds, French Bulldogs) carry a real, breed-typical early spinal-disc risk (FGF4-driven). Sudden back pain, reluctance to jump, or dragging/wobbly hind legs is an IVDD emergency sign - same-day vet visit, not wait-and-see.",
     sourceIds:["fgf4-chondro"]},
-  {tags:["brachycephalic"],
+  {tags:["chondrodystrophic"], round:"senses",
+    text:"Early disc pain doesn't always look like limping - standard veterinary guidance is that reluctance to be handled, new irritability, or hiding can be the first sign, even before a limp or dragging leg shows up.",
+    sourceIds:[]},
+  {tags:["chondrodystrophic"], round:"body",
+    text:"Keeping body condition lean matters more for these breeds than most at this age - metabolism naturally slows in the middle years, and extra weight adds mechanical load onto a spine that's already structurally more disc-vulnerable.",
+    sourceIds:[]},
+  {tags:["chondrodystrophic"], round:"history",
+    text:"If there's ever been an episode before, recurrence is a real, documented risk worth tracking in their medical history - one study found about 19% of dogs had a recurrence after surgery overall, rising to roughly 25% specifically in Dachshunds, with 96% of recurrences happening within 3 years.",
+    sourceIds:["mayhew2004ivddrecurrence"]},
+
+  {tags:["brachycephalic"], round:"body",
     text:"Brachycephalic breeds (French Bulldogs, Pugs, Bulldogs) can still show BOAS-type breathing signs well into middle age, not just as puppies - noisy breathing, reduced heat tolerance, or exercise avoidance are worth mentioning at a checkup even if they've 'always been like that.'",
     sourceIds:[]},
-  {tags:["giant"],
+  {tags:["brachycephalic"], round:"mobility",
+    text:"Reluctance to keep going on a walk, or needing to stop and rest sooner than a same-size non-brachycephalic dog would, can be a practical sign of an airway working harder than it should - easy to write off as just 'slowing down' at this age.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"senses",
+    text:"Sleep-disordered breathing - snoring with pauses, restless or interrupted sleep - is a well-recognized part of the same airway picture in flat-faced breeds, and it's easy to mistake for just being an unusually loud sleeper.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"history",
+    text:"Worth flagging to your vet before any sedation or anesthesia, even for something routine like a dental cleaning: one study found brachycephalic dogs had a postanesthetic complication rate of 13.9%, versus 3.6% in matched non-brachycephalic dogs.",
+    sourceIds:["gruenheid2018anesthesia"]},
+
+  {tags:["giant"], round:"body",
     text:"Giant breeds are already approaching their earlier senior-onset window at this stage (they age on a compressed timeline) - joint stiffness or reduced stamina that would be unremarkable in a small-breed middle-aged dog deserves a closer look here.",
     sourceIds:[]},
-  {tags:["generic"],
-    text:"No specific breed-risk flagged for this pet - the general mobility, weight, and organ-signal questions below still cover the most common middle-age concerns.",
+  {tags:["giant"], round:"mobility",
+    text:"Reduced willingness to jump or take stairs can show up here earlier than it would in a smaller breed - a large frame's own body weight adds real joint load over time, independent of any specific injury.",
+    sourceIds:[]},
+  {tags:["giant"], round:"senses",
+    text:"Giant breeds' whole life-stage timeline runs compressed relative to small breeds (shorter overall lifespan, earlier senior onset) - so behavior changes that would be unusual at this chronological age in a smaller dog aren't necessarily unusual here.",
+    sourceIds:[]},
+  {tags:["giant"], round:"history",
+    text:"Worth confirming your vet is already aware: giant, deep-chested breeds carry a real elevated lifetime risk of gastric dilatation-volvulus (bloat) - one study put lifetime risk in Great Danes at roughly 42%. If a preventive gastropexy hasn't come up before, now's a reasonable time to ask.",
+    sourceIds:["glickman2000gdv"]},
+
+  {tags:["generic"], round:"mobility",
+    text:"No specific breed-risk flagged for this pet - the mobility & energy questions in this round still cover the most common middle-age concerns.",
+    sourceIds:[]},
+  {tags:["generic"], round:"senses",
+    text:"No specific breed-risk flagged for this pet - the senses, mind & behavior questions in this round still cover the most common middle-age concerns.",
+    sourceIds:[]},
+  {tags:["generic"], round:"body",
+    text:"No specific breed-risk flagged for this pet - the general weight and organ-signal questions in this round still cover the most common middle-age concerns.",
+    sourceIds:[]},
+  {tags:["generic"], round:"history",
+    text:"No specific breed-risk flagged for this pet - the medical & vet-history questions in this round still cover the most common middle-age concerns.",
     sourceIds:[]},
 ];
 

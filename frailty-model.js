@@ -153,11 +153,24 @@ function petBreedTags(species, breedText, weightKg){
   return tags;
 }
 
-function matchBreedRiskNotes(species, breedText, weightKg, notes){
+/* roundKey (optional: "mobility"/"senses"/"body"/"history") lets a single
+   tag carry multiple note variants - one genuinely different fact per
+   survey round instead of repeating the same note on every Results page.
+   Per matched tag: prefer a note whose own `round` field equals roundKey,
+   else fall back to that tag's round-less/default note. Omitting roundKey
+   (or notes with no `round` field at all) reproduces the original
+   one-note-per-tag behavior exactly - existing single-variant content
+   files keep working unchanged. */
+function matchBreedRiskNotes(species, breedText, weightKg, notes, roundKey){
   const tags = petBreedTags(species, breedText, weightKg);
-  const matched = (notes || []).filter(n => n.tags && n.tags.some(t => tags.includes(t)));
-  if (matched.length) return matched;
-  return (notes || []).filter(n => n.tags && n.tags.includes("generic"));
+  const all = notes || [];
+  const matchedTags = tags.filter(t => all.some(n => n.tags && n.tags.includes(t)));
+  const activeTags = matchedTags.length ? matchedTags : ["generic"];
+  return activeTags.map(tag => {
+    const forTag = all.filter(n => n.tags && n.tags.includes(tag));
+    const exact = roundKey ? forTag.find(n => n.round === roundKey) : null;
+    return exact || forTag.find(n => !n.round) || forTag[0];
+  }).filter(Boolean);
 }
 
 /* ---------- interim scoring model (isolated swap point) ---------- */

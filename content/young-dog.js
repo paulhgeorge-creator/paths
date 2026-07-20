@@ -25,6 +25,9 @@ const sources = [
   {id:"oneill2023osa", title:"Dog breeds and conformations predisposed to osteosarcoma in the UK: a VetCompass study", author:"O'Neill DG et al.", year:2023, url:"https://pmc.ncbi.nlm.nih.gov/articles/PMC10294386/"},
   {id:"boas-fbdog", title:"BOAS prevalence and owner/veterinary-diagnosis gap in French Bulldogs (peer-reviewed prevalence study)", author:"see URL - specific author list not independently re-verified this pass", year:2022, url:"https://pmc.ncbi.nlm.nih.gov/articles/PMC10702215/"},
   {id:"fgf4-chondro", title:"FGF4 retrogene insertion (12-FGF4RG) and disc calcification risk in chondrodystrophic breeds including French Bulldog", author:"Reunanen VLJ et al.", year:2025, url:"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12577395/"},
+  {id:"gruenheid2018anesthesia", title:"Risk of anesthesia-related complications in brachycephalic dogs", author:"Gruenheid M et al.", year:2018, url:"https://pubmed.ncbi.nlm.nih.gov/30020004/"},
+  {id:"glickman2000gdv", title:"Multiple risk factors for the gastric dilatation-volvulus syndrome in dogs", author:"Glickman LT et al.", year:2000, url:"https://doi.org/10.2460/javma.2000.216.40"},
+  {id:"mayhew2004ivddrecurrence", title:"Risk factors for recurrence of clinical signs associated with thoracolumbar intervertebral disk herniation in dogs: 229 cases (1994-2000)", author:"Mayhew PD et al.", year:2004, url:"https://pubmed.ncbi.nlm.nih.gov/15521446/"},
 ];
 
 const questions = [
@@ -67,18 +70,65 @@ const breedConditionalQuestions = [
   ]},
 ];
 
+// Each tag below now carries up to 4 round-themed variants (mobility/senses/
+// body/history, matching PART_META) instead of one fact repeated on every
+// Results page - 2026-07-20, direct request. Same underlying condition per
+// tag, a genuinely different real angle on it per round. Where research
+// couldn't turn up a distinct, real, citable angle for a given round (see
+// pawlonboarding.md's research pass), the note says so honestly instead of
+// inventing one - same discipline this app already applies to calibration
+// constants and the BCS-image licensing blocker.
 const breedRiskNotes = [
-  {tags:["brachycephalic"],
+  {tags:["brachycephalic"], round:"body",
     text:"Watch for noisy or labored breathing, snoring, or reduced heat/exercise tolerance. One peer-reviewed prevalence study found 64% of French Bulldogs showed owner-observable BOAS signs, but only 13% had a formal vet diagnosis - a real diagnostic gap this kind of question is meant to help close.",
     sourceIds:["boas-fbdog"]},
-  {tags:["chondrodystrophic"],
+  {tags:["brachycephalic"], round:"mobility",
+    text:"Reluctance to keep going on a walk, or needing to stop and rest sooner than you'd expect, is often the first practical sign of a narrowed airway working harder than it should - sometimes noticeable before the breathing itself sounds obviously abnormal.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"senses",
+    text:"Sleep-disordered breathing - snoring with pauses, restless or interrupted sleep - is a well-recognized part of the same airway picture in flat-faced breeds, not just a nighttime nuisance noise.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"history",
+    text:"Worth flagging to your vet before any sedation or anesthesia, even for something routine like a dental cleaning: one study found brachycephalic dogs had a postanesthetic complication rate of 13.9%, versus 3.6% in matched non-brachycephalic dogs.",
+    sourceIds:["gruenheid2018anesthesia"]},
+
+  {tags:["chondrodystrophic"], round:"mobility",
     text:"Chondrodystrophic breeds (Dachshunds, Corgis, Basset Hounds, French Bulldogs themselves) carry a real, breed-typical early spinal-disc risk (FGF4 retrogene-driven). Sudden reluctance to jump, yelping, or a hunched back at any age is worth a same-day vet call.",
     sourceIds:["fgf4-chondro"]},
-  {tags:["giant"],
+  {tags:["chondrodystrophic"], round:"body",
+    text:"Keeping body condition lean matters even more for these breeds than most - extra weight adds mechanical load onto a spine that's already structurally more disc-vulnerable, so drift on the body-condition score here isn't just a general weight issue.",
+    sourceIds:[]},
+  {tags:["chondrodystrophic"], round:"senses",
+    text:"Early disc pain doesn't always look like limping - standard veterinary guidance is that reluctance to be picked up or handled, new irritability, or hiding can be the first sign, before any obvious mobility change shows up.",
+    sourceIds:[]},
+  {tags:["chondrodystrophic"], round:"history",
+    text:"If there's ever been an episode before, recurrence is a real, documented risk worth tracking in their medical history - one study found about 19% of dogs had a recurrence after surgery overall, rising to roughly 25% specifically in Dachshunds, with 96% of recurrences happening within 3 years.",
+    sourceIds:["mayhew2004ivddrecurrence"]},
+
+  {tags:["giant"], round:"mobility",
     text:"Giant-breed puppies/young adults grow fast on a body frame that reaches full size quickly - keep an eye on any persistent limping or reluctance to exercise rather than assuming it's normal growing pains.",
     sourceIds:[]},
-  {tags:["generic"],
-    text:"No specific breed-risk flagged for this pet - the general mobility, breathing, and body-condition questions below still cover the most common young-dog concerns.",
+  {tags:["giant"], round:"body",
+    text:"Panosteitis - a real, self-limiting bone inflammation sometimes called \"growing pains\" - shows up disproportionately in large/giant-breed puppies around 6-18 months old. It resolves on its own, but it's worth naming to your vet rather than assuming it's just clumsiness.",
+    sourceIds:[]},
+  {tags:["giant"], round:"senses",
+    text:"No specific research links giant-breed size to senses or behavior changes at this young life stage - the general senses & behavior questions this round still apply the same way they would for any young dog.",
+    sourceIds:[]},
+  {tags:["giant"], round:"history",
+    text:"Worth asking your vet about now, not later: giant, deep-chested breeds carry a real elevated lifetime risk of gastric dilatation-volvulus (bloat) - one study put lifetime risk in Great Danes at roughly 42%. Many vets discuss a preventive gastropexy at spay/neuter time for exactly this reason.",
+    sourceIds:["glickman2000gdv"]},
+
+  {tags:["generic"], round:"mobility",
+    text:"No specific breed-risk flagged for this pet - the mobility & energy questions in this round still cover the most common young-dog concerns at this life stage.",
+    sourceIds:[]},
+  {tags:["generic"], round:"senses",
+    text:"No specific breed-risk flagged for this pet - the senses, mind & behavior questions in this round still cover the most common young-dog concerns at this life stage.",
+    sourceIds:[]},
+  {tags:["generic"], round:"body",
+    text:"No specific breed-risk flagged for this pet - the body-condition and breathing questions in this round still cover the most common young-dog concerns at this life stage.",
+    sourceIds:[]},
+  {tags:["generic"], round:"history",
+    text:"No specific breed-risk flagged for this pet - the medical & vet-history questions in this round still cover the most common young-dog concerns at this life stage.",
     sourceIds:[]},
 ];
 

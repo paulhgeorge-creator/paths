@@ -60,15 +60,41 @@ const breedConditionalQuestions = [
   ]},
 ];
 
+// Round-themed variants (mobility/senses/body/history) for the brachycephalic
+// (PKD) and generic tags - 2026-07-20, same rationale as young-dog.js's
+// breedRiskNotes header comment. chondrodystrophic stays a single note
+// (that tag never actually matches any real cat breed - petBreedTags() is
+// dog-only for it - so it's unreachable content; not worth the effort of
+// expanding something that can never render).
 const breedRiskNotes = [
-  {tags:["brachycephalic"],
+  {tags:["brachycephalic"], round:"body",
     text:"Persians and other flat-faced cat breeds can carry real, well-documented polycystic kidney disease risk - genetic testing or an ultrasound screen is worth asking your vet about now, even though symptoms themselves typically don't show up until later (average onset around age 7). Flat-faced breathing signs (noisy breathing, reduced heat tolerance) are worth watching separately from the kidney question.",
     sourceIds:["pkd-mexico","pkd-iran"]},
+  {tags:["brachycephalic"], round:"mobility",
+    text:"No specific PKD-related mobility concern applies at this young life stage - kidney symptoms typically don't emerge until around age 7, so the general mobility & energy questions this round still apply the same way they would for any young cat.",
+    sourceIds:[]},
+  {tags:["brachycephalic"], round:"senses",
+    text:"Once symptoms do eventually start (typically not until middle age), increased thirst or more trips to the water bowl/litter box tends to be the first noticeable sign - worth knowing what to watch for later, even though there's nothing to flag yet at this age.",
+    sourceIds:["pkd-mexico"]},
+  {tags:["brachycephalic"], round:"history",
+    text:"Ask your vet about genetic testing or an ultrasound screen now, even though symptoms won't show for years - having a screening result on record in their medical history before anything becomes symptomatic is exactly the kind of thing worth doing early.",
+    sourceIds:["pkd-mexico","pkd-iran"]},
+
   {tags:["chondrodystrophic"],
     text:"Chondrodystrophic-pattern breeds are rarer among cats than dogs, but if applicable, sudden reluctance to jump or a hunched posture at any age is worth a same-day vet call rather than a wait-and-see.",
     sourceIds:[]},
-  {tags:["generic"],
-    text:"No specific breed-risk flagged for this pet - the general mobility, breathing, and body-condition questions below still cover the most common young-cat concerns.",
+
+  {tags:["generic"], round:"mobility",
+    text:"No specific breed-risk flagged for this pet - the general mobility & energy questions in this round still cover the most common young-cat concerns.",
+    sourceIds:[]},
+  {tags:["generic"], round:"senses",
+    text:"No specific breed-risk flagged for this pet - the senses, mind & behavior questions in this round still cover the most common young-cat concerns.",
+    sourceIds:[]},
+  {tags:["generic"], round:"body",
+    text:"No specific breed-risk flagged for this pet - the breathing and body-condition questions in this round still cover the most common young-cat concerns.",
+    sourceIds:[]},
+  {tags:["generic"], round:"history",
+    text:"No specific breed-risk flagged for this pet - the medical & vet-history questions in this round still cover the most common young-cat concerns.",
     sourceIds:[]},
 ];
 
