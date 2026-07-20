@@ -28,6 +28,12 @@
     --pv-font-display:'Cormorant','Editorial New',ui-serif,Georgia,serif;
     --pv-font-body:'Inter','Founders Grotesk',ui-sans-serif,system-ui,sans-serif;
     --pv-radius-pill:60px;
+    /* Zone-color system (2026-07-20 GUI restyle) - same 3 tiers/thresholds
+       scoreRingColor() has always used, just promoted from hardcoded JS hex
+       literals to reusable tokens so the ring, category bars, and the
+       Completion multiplier can all share one color vocabulary. */
+    --pv-good:#4caf7d; --pv-mid:#e8a33d; --pv-concern:#c65a2e;
+    --pv-space-sm:8px; --pv-space-md:20px; --pv-space-lg:40px;
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--pv-cream);color:var(--pv-ink);font-family:var(--pv-font-body);letter-spacing:-0.02em;line-height:1.45;}
@@ -46,33 +52,53 @@
   .pv-header-illos{display:flex;align-items:center;gap:10px;}
   .pv-header-illos svg{width:34px;height:auto;}
   .pv-ring-wrap{display:flex;align-items:center;gap:10px;}
-  .pv-ring-label{font-weight:300;font-size:12px;text-transform:uppercase;color:var(--pv-blue);}
+  .pv-ring-label{font-weight:500;font-size:12px;text-transform:uppercase;color:var(--pv-blue);}
   .pv-ring-svg circle{fill:none;stroke-linecap:round;}
   .pv-ring-bg{stroke:var(--pv-ash);stroke-width:3;}
   .pv-ring-fg{stroke:var(--pv-blue);stroke-width:3;transition:stroke-dashoffset .4s ease;}
 
   .pv-body{padding:clamp(20px,3vw,36px);}
-  .pv-eyebrow{font-weight:300;font-size:13px;text-transform:uppercase;color:var(--pv-blue);margin:0 0 6px;}
-  .pv-headline{font-family:var(--pv-font-display);font-weight:300;color:var(--pv-blue);font-size:clamp(24px,3vw,34px);line-height:1;margin:0 0 12px;}
-  .pv-hint{color:var(--pv-muted);font-size:13px;margin:0 0 10px;}
+  .pv-eyebrow{font-weight:500;font-size:13px;text-transform:uppercase;color:var(--pv-blue);margin:0 0 6px;}
+  .pv-headline{font-family:var(--pv-font-display);font-weight:400;color:var(--pv-blue);font-size:clamp(24px,3vw,34px);line-height:1;margin:0 0 12px;}
+  .pv-hint{color:var(--pv-muted);font-size:13px;font-weight:400;margin:0 0 10px;}
 
   .pv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px 28px;align-items:start;}
   .pv-field{display:flex;flex-direction:column;gap:6px;margin-bottom:22px;}
-  .pv-field label{font-weight:300;font-size:13px;text-transform:uppercase;color:var(--pv-blue);}
+  .pv-field label{font-weight:500;font-size:13px;text-transform:uppercase;color:var(--pv-blue);}
   .pv-field input[type="text"], .pv-field input[type="number"]{
-    font-family:var(--pv-font-display);font-weight:300;font-size:clamp(18px,2vw,22px);color:var(--pv-ink);
+    font-family:var(--pv-font-display);font-weight:400;font-size:clamp(18px,2vw,22px);color:var(--pv-ink);
     background:transparent;border:none;border-bottom:1.5px solid var(--pv-ash);padding:6px 0;outline:none;letter-spacing:-0.02em;width:100%;
   }
   .pv-field input:focus{border-bottom-color:var(--pv-blue);}
   .pv-subrow{display:flex;gap:16px;}
   .pv-subrow .pv-field{flex:1;margin-bottom:0;}
 
+  /* Underline-only input style (no boxed border) reads badly with the
+     browser's native number-spinner arrows, which float disconnected from
+     any visible box - hidden everywhere rather than kept for just some
+     number inputs, for one consistent look. */
+  input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+  input[type="number"]{-moz-appearance:textfield;}
+
   .pv-toggle-row, .pv-segmented, .pv-chip-grid{display:flex;flex-wrap:wrap;gap:8px;}
   .pv-toggle, .pv-segment, .pv-chip{
-    border:1.5px solid var(--pv-ash);border-radius:var(--pv-radius-pill);padding:9px 18px;font-weight:300;font-size:13px;
+    border:1.5px solid var(--pv-ash);border-radius:var(--pv-radius-pill);padding:9px 18px;font-weight:500;font-size:13px;
     text-transform:uppercase;letter-spacing:-0.02em;color:var(--pv-blue);background:transparent;cursor:pointer;
     transition:border-color .15s ease;display:inline-flex;align-items:center;gap:8px;font-family:var(--pv-font-body);
   }
+  /* Custom hover/focus description tooltip (2026-07-20, direct request) -
+     replaces the native OS title-attribute tooltip (unstyleable, looked
+     out of place) with one matching this app's own visual language: white
+     background, blue text, positioned above the element. */
+  [data-tooltip]{position:relative;}
+  [data-tooltip]::after{
+    content:attr(data-tooltip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:#fff;color:var(--pv-blue);border:1.5px solid var(--pv-blue);border-radius:8px;padding:8px 10px;
+    font-size:12px;font-weight:500;text-transform:none;letter-spacing:normal;line-height:1.4;
+    width:200px;max-width:60vw;text-align:left;white-space:normal;
+    opacity:0;pointer-events:none;transition:opacity .15s ease;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:20;
+  }
+  [data-tooltip]:hover::after, [data-tooltip]:focus-visible::after{opacity:1;}
   .pv-toggle svg{width:18px;height:auto;}
   .pv-toggle.pv-selected, .pv-segment.pv-selected, .pv-chip.pv-selected{border-color:var(--pv-blue);border-width:1.5px;background:rgba(0,110,255,.06);}
 
@@ -87,22 +113,47 @@
   .pv-wiz-nav{display:flex;align-items:center;gap:12px;margin-left:auto;}
   .pv-pill-btn{
     border:1.5px solid var(--pv-blue);border-radius:var(--pv-radius-pill);background:transparent;color:var(--pv-blue);
-    font-family:var(--pv-font-body);font-weight:300;font-size:15px;letter-spacing:-0.02em;padding:13px 38px;
+    font-family:var(--pv-font-body);font-weight:500;font-size:15px;letter-spacing:-0.02em;padding:13px 38px;
     cursor:pointer;text-transform:uppercase;transition:opacity .15s ease;width:100%;
   }
   .pv-pill-btn.pv-ghost{background:transparent;}
   .pv-pill-btn.pv-small{padding:8px 20px;font-size:12px;width:auto;}
   .pv-pill-btn:hover{opacity:.75;}
 
-  .pv-result{display:flex;align-items:center;gap:14px;}
-  .pv-result-ring-wrap{position:relative;width:56px;height:56px;flex-shrink:0;}
-  .pv-result-ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
-  .pv-result-ring-bg{fill:none;stroke:var(--pv-ash);stroke-width:5;}
-  .pv-result-ring-fg{fill:none;stroke:var(--pv-blue);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 1s ease;}
-  .pv-result-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--pv-font-display);font-weight:300;font-size:15px;color:var(--pv-blue);}
-  .pv-result-text{display:flex;flex-direction:column;}
-  .pv-result-label{font-weight:300;font-size:12px;text-transform:uppercase;color:var(--pv-blue);}
-  .pv-result-sub{font-weight:400;font-size:14px;color:var(--pv-ink);max-width:320px;}
+  /* Hero score block (2026-07-20 GUI restyle) - the score ring becomes the
+     single focal point at the top of a Result page, WHOOP-style
+     color-zone-first status communication (verified via /deep-research:
+     WHOOP signals status primarily through categorical color zones, not a
+     bare number). Same computeResult()/scoreRingColor() data as before, just
+     the enlarged single-focus layout instead of one card among several.
+     Replaces the old .pv-result/.pv-result-ring-wrap score card entirely -
+     that CSS is deleted here since renderResult() no longer uses it (a
+     byte-identical scoped copy still lives inside PV_WIDGET_HTML for the
+     standalone baseline widget's own small live-preview ring, untouched). */
+  .pv-hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:var(--pv-space-md);}
+  .pv-hero-ring-wrap{position:relative;width:clamp(140px,30vw,180px);height:clamp(140px,30vw,180px);}
+  .pv-hero-ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
+  .pv-hero-ring-bg{fill:none;stroke:var(--pv-ash);stroke-width:7;}
+  .pv-hero-ring-fg{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1s ease;}
+  .pv-hero-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .pv-hero-num-val{font-family:var(--pv-font-display);font-weight:300;font-size:clamp(38px,7vw,52px);line-height:1;}
+  .pv-hero-num-label{font-weight:500;font-size:11px;text-transform:uppercase;color:var(--pv-muted);margin-top:2px;}
+  .pv-hero-zone{font-weight:600;font-size:clamp(17px,2.4vw,20px);margin-top:8px;}
+  .pv-hero-delta{font-size:13px;color:var(--pv-muted);max-width:340px;margin-top:2px;}
+
+  /* Lighter divider-based grouping (2026-07-20 GUI restyle) - replaces
+     stacking every sub-item in its own heavy-bordered .pv-card, the direct
+     source of the "too much information thrown at you" feedback. Same
+     content/data, just grouped as one flowing section with sub-headers and
+     border-top dividers instead of 3-4 separate boxes. */
+  .pv-section{margin-bottom:16px;}
+  .pv-section + .pv-section{border-top:1.5px solid var(--pv-ash);padding-top:16px;}
+  .pv-section-title{font-weight:500;font-size:14px;margin:0 0 10px;color:var(--pv-ink);}
+  .pv-row-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;}
+  .pv-row-list li{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--pv-ink);line-height:1.4;}
+  .pv-row-dot{flex-shrink:0;width:7px;height:7px;border-radius:50%;margin-top:6px;background:var(--pv-blue);}
+  .pv-row-dot.pv-dot-watch{background:var(--pv-concern);}
+  .pv-row-dot.pv-dot-help{background:var(--pv-good);}
 
   /* supplemental components (not in the original widget - same language) */
   .pv-card{border:1.5px solid var(--pv-ash);border-radius:14px;padding:18px 20px;margin-bottom:16px;text-align:left;}
@@ -111,10 +162,10 @@
      same a11y bar as the citation tooltip) - reset the UA button chrome so
      they read as cards, not system buttons. */
   .pv-path-card{background:transparent;font-family:inherit;width:100%;cursor:pointer;display:block;}
-  .pv-path-card:hover,.pv-path-card:focus-visible{border-color:var(--pv-blue);}
+  .pv-path-card:hover,.pv-path-card:focus-visible{background:rgba(0,110,255,.1) !important;}
   .pv-stat-row{display:flex;justify-content:center;gap:36px;margin-bottom:20px;flex-wrap:wrap;}
   .pv-stat-block{text-align:center;min-width:110px;}
-  .pv-stat-label{font-weight:300;font-size:12px;text-transform:uppercase;color:var(--pv-blue);margin-bottom:2px;}
+  .pv-stat-label{font-weight:500;font-size:12px;text-transform:uppercase;color:var(--pv-blue);margin-bottom:2px;}
   .pv-stat-value{font-family:var(--pv-font-display);font-weight:300;font-size:clamp(30px,4vw,40px);color:var(--pv-blue);line-height:1.1;}
   .pv-stat-value .pv-unit{font-size:15px;font-weight:400;}
   .pv-stat-note{font-size:11px;color:var(--pv-muted);max-width:160px;margin:4px auto 0;}
@@ -127,7 +178,7 @@
   /* Aito the guide (2026-07-20, direct request) - a small persistent
      presence on dog-only pages. Reuses .pv-card's rounded-callout language
      (just tinted) rather than inventing a new visual style. */
-  .pv-guide{display:flex;gap:10px;align-items:flex-start;background:rgba(0,110,255,.05);border:1.5px solid var(--pv-ash);border-radius:14px;padding:14px 16px;margin-bottom:16px;text-align:left;}
+  .pv-guide{display:flex;gap:12px;align-items:flex-start;background:rgba(0,110,255,.06);border:none;border-left:3px solid var(--pv-blue);border-radius:0 12px 12px 0;padding:16px 18px;margin-bottom:16px;text-align:left;}
   .pv-guide-icon{flex-shrink:0;width:48px;height:48px;}
   .pv-guide-icon svg{width:100%;height:100%;}
   .pv-guide-text{font-size:13px;line-height:1.45;color:var(--pv-ink);}
@@ -172,7 +223,7 @@
 /* Deficit score: 0 absent, 0.5 mild, 1 severe/present.
    Age/FI model lives in frailty-model.js - see that file for the interim
    scoring model and its calibration TODO. */
-const { lifeStage, lifeStageDisplay, fiZone, longevityScore, healthMultiplier, foodActivityBalance,
+const { lifeStage, lifeStageDisplay, fiZone, longevityScore, LONGEVITY_SCORE_ANCHORS, healthMultiplier, foodActivityBalance,
         foodEquationMultiplier, foodBalancePercentile,
         catHumanEquivalent, dogHumanEquivalent, bcsToDeficit,
         estimatePhysiologicalAge, scoreActivityMinutes, classifyDelta,
@@ -281,7 +332,7 @@ const state = {
   step:"pathchooser",
   baseline:{
     species:"dog", name:"", breed:"",
-    weightValue:44, weightUnit:"lb", // widget's weight field is lbs-only (no kg toggle in this UI) - 44lb ~= 20kg, same effective default as before
+    weightValue:0, weightUnit:"lb", // starts blank like age (0 || "" renders as an empty field, placeholder shown) rather than presuming a weight - direct request, 2026-07-20
     sexNeuter:"unknown", // informational only - see reproductive-status note above, not part of the FI denominator
     weightGoal:"maintain", // owner-stated intent (gain/maintain/lose) - informational, reconciled against BCS on the BCS step, not a scoring input
     dobKnown:true, dobMonth:"", dobDay:"", dobYear:"",
@@ -725,18 +776,18 @@ const PV_WIDGET_HTML = `
     .pv-header-illos{ display:flex; align-items:center; gap:10px; }
     .pv-header-illos svg{ width:34px; height:auto; }
     .pv-ring-wrap{ display:flex; align-items:center; gap:10px; }
-    .pv-ring-label{ font-weight:300; font-size:12px; text-transform:uppercase; color:var(--pv-blue); }
+    .pv-ring-label{ font-weight:500; font-size:12px; text-transform:uppercase; color:var(--pv-blue); }
     .pv-ring-svg circle{ fill:none; stroke-linecap:round; }
     .pv-ring-bg{ stroke:var(--pv-ash); stroke-width:3; }
     .pv-ring-fg{ stroke:var(--pv-blue); stroke-width:3; transition:stroke-dashoffset .4s ease; }
 
     .pv-body{ padding:clamp(20px,3vw,36px); }
     .pv-eyebrow{
-      font-weight:300; font-size:13px; text-transform:uppercase;
+      font-weight:500; font-size:13px; text-transform:uppercase;
       color:var(--pv-blue); margin:0 0 6px;
     }
     .pv-headline{
-      font-family:var(--pv-font-display); font-weight:300; color:var(--pv-blue);
+      font-family:var(--pv-font-display); font-weight:400; color:var(--pv-blue);
       font-size:clamp(24px,3vw,34px); line-height:1; margin:0 0 24px;
     }
 
@@ -748,10 +799,10 @@ const PV_WIDGET_HTML = `
     }
     .pv-field{ display:flex; flex-direction:column; gap:6px; }
     .pv-field label{
-      font-weight:300; font-size:13px; text-transform:uppercase; color:var(--pv-blue);
+      font-weight:500; font-size:13px; text-transform:uppercase; color:var(--pv-blue);
     }
     .pv-field input[type="text"], .pv-field input[type="number"]{
-      font-family:var(--pv-font-display); font-weight:300;
+      font-family:var(--pv-font-display); font-weight:400;
       font-size:clamp(18px,2vw,22px); color:var(--pv-ink);
       background:transparent; border:none; border-bottom:1.5px solid var(--pv-ash);
       padding:6px 0; outline:none; letter-spacing:-0.02em; width:100%;
@@ -759,11 +810,13 @@ const PV_WIDGET_HTML = `
     .pv-field input:focus{ border-bottom-color:var(--pv-blue); }
     .pv-subrow{ display:flex; gap:16px; }
     .pv-subrow .pv-field{ flex:1; }
+    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+    input[type="number"]{ -moz-appearance:textfield; }
 
     .pv-toggle-row, .pv-segmented, .pv-chip-grid{ display:flex; flex-wrap:wrap; gap:8px; }
     .pv-toggle, .pv-segment, .pv-chip{
       border:1.5px solid var(--pv-ash); border-radius:var(--pv-radius-pill);
-      padding:9px 18px; font-weight:300; font-size:13px; text-transform:uppercase;
+      padding:9px 18px; font-weight:500; font-size:13px; text-transform:uppercase;
       letter-spacing:-0.02em; color:var(--pv-blue); background:transparent;
       cursor:pointer; transition:border-color .15s ease; display:inline-flex;
       align-items:center; gap:8px;
@@ -772,6 +825,15 @@ const PV_WIDGET_HTML = `
     .pv-toggle.pv-selected, .pv-segment.pv-selected, .pv-chip.pv-selected{
       border-color:var(--pv-blue); border-width:1.5px;
     }
+    [data-tooltip]{ position:relative; }
+    [data-tooltip]::after{
+      content:attr(data-tooltip); position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+      background:#fff; color:var(--pv-blue); border:1.5px solid var(--pv-blue); border-radius:8px; padding:8px 10px;
+      font-size:12px; font-weight:500; text-transform:none; letter-spacing:normal; line-height:1.4;
+      width:200px; max-width:60vw; text-align:left; white-space:normal;
+      opacity:0; pointer-events:none; transition:opacity .15s ease; box-shadow:0 4px 12px rgba(0,0,0,.1); z-index:20;
+    }
+    [data-tooltip]:hover::after, [data-tooltip]:focus-visible::after{ opacity:1; }
 
     .pv-slider-wrap{ display:flex; flex-direction:column; gap:6px; }
     .pv-slider-value{
@@ -798,7 +860,7 @@ const PV_WIDGET_HTML = `
     .pv-pill-btn{
       border:1.5px solid var(--pv-blue); border-radius:var(--pv-radius-pill);
       background:transparent; color:var(--pv-blue); font-family:var(--pv-font-body);
-      font-weight:300; font-size:15px; letter-spacing:-0.02em; padding:13px 38px;
+      font-weight:500; font-size:15px; letter-spacing:-0.02em; padding:13px 38px;
       cursor:pointer; text-transform:uppercase; transition:opacity .15s ease;
     }
     .pv-result{
@@ -814,7 +876,7 @@ const PV_WIDGET_HTML = `
       font-family:var(--pv-font-display); font-weight:300; font-size:15px; color:var(--pv-blue);
     }
     .pv-result-text{ display:flex; flex-direction:column; }
-    .pv-result-label{ font-weight:300; font-size:12px; text-transform:uppercase; color:var(--pv-blue); }
+    .pv-result-label{ font-weight:500; font-size:12px; text-transform:uppercase; color:var(--pv-blue); }
     .pv-result-sub{ font-weight:400; font-size:14px; color:var(--pv-ink); max-width:320px; }
 
     @media (max-width:520px){
@@ -861,7 +923,7 @@ const PV_WIDGET_HTML = `
       <div class="pv-field">
         <label>Age &amp; weight</label>
         <div class="pv-subrow">
-          <input type="number" data-pv="age" placeholder="Age (yrs)" min="0" max="20" />
+          <input type="number" data-pv="age" placeholder="Age (yrs)" min="0" max="18" />
           <input type="number" data-pv="weight" placeholder="Weight (lbs)" min="0" />
         </div>
         <div class="pv-segmented" data-pv="weight-unit-group" style="margin-top:6px;">
@@ -1009,12 +1071,15 @@ function wirePetVitalsToState(root){
   const typeDog = root.querySelector('[data-pv="type-dog"]');
   const typeCat = root.querySelector('[data-pv="type-cat"]');
   // Each activity-level button carries a dog-specific AND cat-specific hover
-  // title (data-title-dog/data-title-cat) - this keeps the tooltip shown to
-  // one species at a time instead of listing both in the same hover, so
-  // owners never see the other species' examples mixed into their own.
+  // description (data-title-dog/data-title-cat) - this keeps the tooltip
+  // shown to one species at a time instead of listing both in the same
+  // hover, so owners never see the other species' examples mixed into their
+  // own. Uses data-tooltip (CSS-driven custom tooltip, .pv-tooltip-target)
+  // rather than the native title attribute, which rendered as an
+  // unstyleable OS tooltip - not this app's own visual language.
   function syncActivityTitles(){
     root.querySelectorAll('[data-pv="activity"]').forEach(btn=>{
-      btn.title = b.species === "cat" ? btn.dataset.titleCat : btn.dataset.titleDog;
+      btn.dataset.tooltip = b.species === "cat" ? btn.dataset.titleCat : btn.dataset.titleDog;
     });
   }
   // Toggling species here does NOT call render() (this whole widget updates
@@ -1040,9 +1105,9 @@ function wirePetVitalsToState(root){
   // path used, fed through the same fuseAge() pipeline unchanged.
   const ageEl = root.querySelector('[data-pv="age"]');
   if (ageEl) ageEl.addEventListener("input", e=>{
-    // max="20" alone only affects the spinner arrows/form validation, not
+    // max="18" alone only affects the spinner arrows/form validation, not
     // free typing - clamp here so typing "200" can't slip through either.
-    if (parseFloat(e.target.value) > 20){ e.target.value = "20"; }
+    if (parseFloat(e.target.value) > 18){ e.target.value = "18"; }
     b.dobKnown = false;
     b.yearsOnlyAge = e.target.value;
   });
@@ -1176,17 +1241,17 @@ function applyPathPreset(preset){
 
 function renderPathChooser(){
   const body = `
-    <h2 class="pv-headline">Try a survey path</h2>
-    <p class="pv-hint">Each path pre-fills a representative pet for that life stage and breed, then goes straight into the same survey - same BCS step, same 4 rounds, same scoring, same dev breakdown. Only the questions and breed-risk content differ.</p>
+    <h2 class="pv-headline" style="text-align:center;">Try a survey path</h2>
+    <p class="pv-hint" style="max-width:520px;margin:0 auto 24px;text-align:center;">Each path pre-fills a representative pet for that life stage and breed, then goes straight into the same survey - same BCS step, same 4 rounds, same scoring, same dev breakdown. Only the questions and breed-risk content differ.</p>
     <div class="pv-grid">
       ${PATH_PRESETS.map((p,i) => `
-        <button type="button" class="pv-card pv-card-center pv-path-card" data-path-idx="${i}">
+        <button type="button" class="pv-card-center pv-path-card" data-path-idx="${i}" style="border:none;background:rgba(0,110,255,.05);border-radius:14px;padding:20px 18px;transition:background .15s ease;">
           <div style="font-weight:500;font-size:16px;">${p.label}${p.exemplar ? ` (${p.exemplar})` : ""}</div>
           <div class="pv-hint" style="margin:4px 0 0;">${p.note}</div>
         </button>
       `).join("")}
     </div>
-    <p class="pv-hint" style="margin-top:16px;text-align:center;"><a href="#" id="manual-setup-link">Or set up your own pet manually</a></p>
+    <p class="pv-hint" style="margin-top:20px;text-align:center;"><a href="#" id="manual-setup-link">Or set up your own pet manually</a></p>
   `;
   app.innerHTML = pvShell("Choose a path", "pathchooser", body, "");
   app.querySelectorAll("[data-path-idx]").forEach(btn=>{
@@ -1876,9 +1941,9 @@ function watchOutSectionHtml(){
 }
 
 function scoreRingColor(score){
-  if (score >= 70) return "#4caf7d";
-  if (score >= 40) return "#e8a33d";
-  return "#c65a2e";
+  if (score >= 70) return "var(--pv-good)";
+  if (score >= 40) return "var(--pv-mid)";
+  return "var(--pv-concern)";
 }
 
 // Compact per-round chart. Deliberately a COMPLETION indicator, not a score
@@ -1980,70 +2045,85 @@ function renderResult(partNumber){
 
   const body = `
     ${r.zone.vet ? `<div class="pv-warn-banner">${name}'s answers suggest it's worth a check-in with your vet soon. This isn't a diagnosis - just a nudge to get eyes on it.</div>` : ""}
-    <h2 class="pv-headline">${name}'s results</h2>
-    <p class="pv-hint" style="max-width:440px;">${STAGE_EXPLAIN[r.stageDisplay]}</p>
-    ${guideBreedNotesHtml()}
+    <h2 class="pv-headline" style="text-align:center;">${name}'s results</h2>
 
-    <div class="pv-stat-row">
+    <!-- Hero score block (2026-07-20 GUI restyle) - one large color-zone-led
+         focal point, WHOOP-style status-at-a-glance, ahead of any supporting
+         text. Same computeResult()/scoreRingColor() data as before, just the
+         single visual focus instead of one card among many. -->
+    <div class="pv-hero">
+      <div class="pv-hero-ring-wrap">
+        <svg viewBox="0 0 56 56">
+          <circle class="pv-hero-ring-bg" cx="28" cy="28" r="24"></circle>
+          <circle class="pv-hero-ring-fg" cx="28" cy="28" r="24" style="stroke:${ringColor};" stroke-dasharray="150.8" stroke-dashoffset="${scoreOffset}"></circle>
+        </svg>
+        <div class="pv-hero-num">
+          <div class="pv-hero-num-val" style="color:${ringColor};">${r.score}</div>
+          <div class="pv-hero-num-label">Longevity Score</div>
+        </div>
+      </div>
+      <div class="pv-hero-zone" style="color:${ringColor};">${r.zone.label}</div>
+      <div class="pv-hero-delta">${deltaCopy(r.delta, r.chronAge, r.deltaCategory)}</div>
+    </div>
+
+    <div class="pv-stat-row" style="margin-bottom:14px;">
       <div class="pv-stat-block">
         <div class="pv-stat-label">Pet Age</div>
-        <div class="pv-stat-value">${ageDisplay.value}<span class="pv-unit">${ageDisplay.unit}</span></div>
+        <div class="pv-stat-value" style="font-size:22px;">${ageDisplay.value}<span class="pv-unit">${ageDisplay.unit}</span></div>
         ${ageSoftener}
       </div>
       ${r.humanEq ? `
       <div class="pv-stat-block">
         <div class="pv-stat-label">Human Age</div>
-        <div class="pv-stat-value">${r.humanEq}<span class="pv-unit"> yrs</span></div>
+        <div class="pv-stat-value" style="font-size:22px;">${r.humanEq}<span class="pv-unit"> yrs</span></div>
         <div class="pv-stat-note">What a human would be at the same biological stage - not ${name}'s real age</div>
       </div>` : ""}
     </div>
 
-    <div class="pv-card">
-      <div class="pv-result">
-        <div class="pv-result-ring-wrap" style="width:72px;height:72px;">
-          <svg viewBox="0 0 56 56">
-            <circle class="pv-result-ring-bg" cx="28" cy="28" r="24"></circle>
-            <circle class="pv-result-ring-fg" cx="28" cy="28" r="24" style="stroke:${ringColor};" stroke-dasharray="150.8" stroke-dashoffset="${scoreOffset}"></circle>
-          </svg>
-          <div class="pv-result-num" style="color:${ringColor};font-size:20px;">${r.score}</div>
-        </div>
-        <div class="pv-result-text">
-          <span class="pv-result-label">Longevity Score</span>
-          <span class="pv-result-sub">${r.zone.label} - ${deltaCopy(r.delta, r.chronAge, r.deltaCategory)}</span>
-        </div>
-      </div>
+    <div style="text-align:center;max-width:440px;margin:0 auto 16px;">
+      <p class="pv-hint" style="margin:0 0 4px;">${STAGE_EXPLAIN[r.stageDisplay]}</p>
+      ${r.species==="cat" ? `<p class="pv-italic-note" style="margin-top:0;">Feline estimate - the science here is still maturing, so this reads a touch less precise.</p>` : ""}
     </div>
-    ${r.species==="cat" ? `<p class="pv-italic-note">Feline estimate - the science here is still maturing, so this reads a touch less precise.</p>` : ""}
+
+    ${guideBreedNotesHtml()}
 
     ${ageTrendChartHTML(partNumber, r)}
 
+    <!-- Flowing details section (2026-07-20 GUI restyle) - replaces what
+         used to be 3-4 separate heavy-bordered .pv-card boxes (the direct
+         source of "too much information thrown at you" feedback) with one
+         card, sub-sections divided by a thin border-top instead of full
+         card chrome each. Same data/copy, same personalizedInsights()/
+         personalizedCategoryInsights() calls, just less visual "boxiness". -->
+    <div class="pv-card">
     ${isLast ? `
-    <div class="pv-card">
-      <div class="pv-insight-title">Watch out for</div>
-      <ul>${watch.map(w=>`<li>${w}</li>`).join("")}</ul>
+      <div class="pv-section">
+        <div class="pv-section-title">Watch out for</div>
+        <ul class="pv-row-list">${watch.map(w=>`<li><span class="pv-row-dot pv-dot-watch"></span>${w}</li>`).join("")}</ul>
+      </div>
+      <div class="pv-section">
+        <div class="pv-section-title">What helps</div>
+        <ul class="pv-row-list">${help.map(h=>`<li><span class="pv-row-dot pv-dot-help"></span>${h}</li>`).join("")}</ul>
+      </div>` : `
+      <div class="pv-section">
+        <div class="pv-section-title">${meta.title} score</div>
+        <div class="pv-bar"><div class="pv-bar-fill" style="width:${catScore ?? 0}%;background:${scoreRingColor(catScore ?? 0)};"></div></div>
+        <div class="pv-bar-copy">${catScore != null ? `${catScore}/100 - feeds into the overall Longevity Score above.` : "Answer a question above to see this round's score."}</div>
+        <p class="pv-hint" style="margin:8px 0 0;">Scoring ${meta.title.toLowerCase()} on its own, instead of folding it straight into one big number, shows exactly where to focus next - not just how ${name} is doing overall.</p>
+      </div>
+      <div class="pv-section">
+        <div class="pv-section-title">Watch out for</div>
+        <ul class="pv-row-list">${catInsights.watchFor.map(w=>`<li><span class="pv-row-dot pv-dot-watch"></span>${w}</li>`).join("")}</ul>
+      </div>
+      <div class="pv-section">
+        <div class="pv-section-title">Recommendations</div>
+        <ul class="pv-row-list">${catInsights.recommendations.map(h=>`<li><span class="pv-row-dot pv-dot-help"></span>${h}</li>`).join("")}</ul>
+      </div>
+      <div class="pv-section">
+        <div class="pv-section-title">Did you know?</div>
+        <p class="pv-hint" style="margin:0;">${catInsights.didYouKnow}</p>
+      </div>`}
     </div>
-    <div class="pv-card">
-      <div class="pv-insight-title">What helps</div>
-      <ul>${help.map(h=>`<li>${h}</li>`).join("")}</ul>
-    </div>` : `
-    <div class="pv-card">
-      <div class="pv-insight-title">${meta.title} score</div>
-      <div class="pv-bar"><div class="pv-bar-fill" style="width:${catScore ?? 0}%;background:${scoreRingColor(catScore ?? 0)};"></div></div>
-      <div class="pv-bar-copy">${catScore != null ? `${catScore}/100 - feeds into the overall Longevity Score above.` : "Answer a question above to see this round's score."}</div>
-      <p class="pv-hint" style="margin:8px 0 0;">Scoring ${meta.title.toLowerCase()} on its own, instead of folding it straight into one big number, shows exactly where to focus next - not just how ${name} is doing overall.</p>
-    </div>
-    <div class="pv-card">
-      <div class="pv-insight-title">Watch out for</div>
-      <ul>${catInsights.watchFor.map(w=>`<li>${w}</li>`).join("")}</ul>
-    </div>
-    <div class="pv-card">
-      <div class="pv-insight-title">Recommendations</div>
-      <ul>${catInsights.recommendations.map(h=>`<li>${h}</li>`).join("")}</ul>
-    </div>
-    <div class="pv-card">
-      <div class="pv-insight-title">Did you know?</div>
-      <p class="pv-hint" style="margin:0;">${catInsights.didYouKnow}</p>
-    </div>`}
 
     <p class="pv-hint">This combines their age, body condition, and today's answers - it gets sharper with each round (${r.n} observations so far).</p>
     <button type="button" class="pv-pill-btn pv-ghost pv-small" id="open-dev-breakdown">View full decision breakdown (developer)</button>
@@ -2073,16 +2153,103 @@ function renderResult(partNumber){
    Back/Next, just a single Close button back to result4. */
 // Visual bar-chart complement to the "Category rollups" table below - same
 // numbers, easier to scan at a glance than four rows of a table.
-function categoryChartHTML(){
+// Merges what used to be two separate cards (a raw numbers table, then a
+// near-duplicate bar chart of the same category scores) into one card that
+// tells the actual pipeline story: each category's own FI/score, then the
+// equal-weighted average those roll up into - Observed FI - the one number
+// that (via the curve chart below) directly produces the Longevity Score.
+function categoryBreakdownHTML(r){
   const rows = Object.values(PART_META).map(meta => {
+    const fi = categoryFI(meta.num);
     const sc = categoryScore(meta.num);
     return `
       <div class="pv-field" style="margin-bottom:10px;">
-        <div class="pv-bar-copy" style="margin:0 0 4px;">${meta.title} - ${sc != null ? sc+"/100" : "no data yet"}</div>
+        <div class="pv-bar-copy" style="margin:0 0 4px;">${meta.title} - ${sc != null ? `${sc}/100 (FI ${fi.toFixed(3)})` : "no data yet"}</div>
         <div class="pv-bar"><div class="pv-bar-fill" style="width:${sc ?? 0}%;background:${scoreRingColor(sc ?? 0)};"></div></div>
       </div>`;
   }).join("");
-  return `<div class="pv-card"><div class="pv-insight-title">Category scores at a glance</div>${rows}</div>`;
+  const obsPct = Math.min(100, r.observedFI*100);
+  return `<div class="pv-card">
+    <div class="pv-insight-title">Category scores &rarr; Observed FI</div>
+    <p class="pv-hint" style="margin:0 0 10px;">Categories are weighted equally: each answered category contributes one equal vote, regardless of how many questions it has - a category with 12 answered items and one with 5 count the same. There is no per-question numeric weight in this model.</p>
+    ${rows}
+    <div class="pv-section" style="border-top:1.5px dashed var(--pv-ash);padding-top:12px;">
+      <div class="pv-bar-copy" style="margin:0 0 4px;font-weight:600;color:var(--pv-ink);">= Observed FI (equal-weighted average of the categories above) - ${r.observedFI.toFixed(3)}</div>
+      <div class="pv-bar" style="height:12px;"><div class="pv-bar-fill" style="width:${obsPct}%;background:var(--pv-blue);"></div></div>
+    </div>
+  </div>`;
+}
+
+// Inverse of longevityScore()'s piecewise-linear curve - given a target score,
+// find the FI value that produces it. Presentation-only (chart band
+// boundaries below); never used by real scoring, so a drift-safe way to
+// derive the exact score>=70/>=40 tier boundaries from the SAME anchors
+// scoreRingColor()'s thresholds mirror, instead of hardcoding separately-
+// guessed FI cutoffs that could silently drift out of sync.
+function scoreToFI(targetScore){
+  const a = LONGEVITY_SCORE_ANCHORS;
+  for (let i=0;i<a.length-1;i++){
+    const [f0,s0]=a[i], [f1,s1]=a[i+1];
+    if ((targetScore<=s0 && targetScore>=s1) || (targetScore>=s0 && targetScore<=s1)){
+      return s0===s1 ? f0 : f0 + (f1-f0)*(targetScore-s0)/(s1-s0);
+    }
+  }
+  return a[a.length-1][0];
+}
+
+// THE chart for "how the Longevity Score was calculated": the real
+// longevityScore() piecewise-linear transfer function, plotted exactly (not
+// smoothed), with this pet's actual Observed FI marked on it - literally the
+// same lookup the app does, just made visible. Deliberately does NOT
+// reference age/breed/eFI/multiplier - those feed a different, separate
+// output (physiological age / Health Multiplier, charted further down) -
+// score is a direct function of Observed FI alone (see computeResult()).
+function longevityScoreCurveHTML(r){
+  const W=280, H=176, mL=30, mR=8, mTop=10, mBottom=28;
+  const plotW = W-mL-mR, plotH = H-mTop-mBottom;
+  const x = fi => mL + Math.max(0,Math.min(1,fi))*plotW;
+  const y = sc => mTop + (1-Math.max(0,Math.min(100,sc))/100)*plotH;
+  const linePath = LONGEVITY_SCORE_ANCHORS.map((pt,i)=>`${i===0?"M":"L"}${x(pt[0]).toFixed(1)},${y(pt[1]).toFixed(1)}`).join(" ");
+  const fiGood = scoreToFI(70), fiMid = scoreToFI(40);
+  const petX = x(r.observedFI), petY = y(r.score);
+  return `<div class="pv-card">
+    <div class="pv-insight-title">Observed FI &rarr; Longevity Score</div>
+    <p class="pv-hint" style="margin:0 0 10px;">This is the actual curve the score comes from - a direct read at this pet's Observed FI (above). Age, breed, and the multiplier below feed a separate metric (physiological age), not this number.</p>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:300px;display:block;margin:0 auto;">
+      <rect x="${mL}" y="${mTop}" width="${(x(fiGood)-mL).toFixed(1)}" height="${plotH}" fill="var(--pv-good)" opacity="0.1"></rect>
+      <rect x="${x(fiGood).toFixed(1)}" y="${mTop}" width="${(x(fiMid)-x(fiGood)).toFixed(1)}" height="${plotH}" fill="var(--pv-mid)" opacity="0.1"></rect>
+      <rect x="${x(fiMid).toFixed(1)}" y="${mTop}" width="${(x(1)-x(fiMid)).toFixed(1)}" height="${plotH}" fill="var(--pv-concern)" opacity="0.1"></rect>
+      <path d="${linePath}" fill="none" stroke="var(--pv-blue)" stroke-width="2"></path>
+      <line x1="${mL}" y1="${petY.toFixed(1)}" x2="${petX.toFixed(1)}" y2="${petY.toFixed(1)}" stroke="var(--pv-muted)" stroke-width="1" stroke-dasharray="3,3"></line>
+      <line x1="${petX.toFixed(1)}" y1="${petY.toFixed(1)}" x2="${petX.toFixed(1)}" y2="${(mTop+plotH).toFixed(1)}" stroke="var(--pv-muted)" stroke-width="1" stroke-dasharray="3,3"></line>
+      <circle cx="${petX.toFixed(1)}" cy="${petY.toFixed(1)}" r="4.5" fill="${scoreRingColor(r.score)}" stroke="#fff8f1" stroke-width="1.5"></circle>
+      <text x="${mL-4}" y="${mTop+4}" text-anchor="end" font-size="10" fill="var(--pv-muted)">100</text>
+      <text x="${mL-4}" y="${(mTop+plotH+4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--pv-muted)">0</text>
+      <text x="${mL}" y="${H-6}" text-anchor="start" font-size="10" fill="var(--pv-muted)">FI 0.0</text>
+      <text x="${(mL+plotW)}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--pv-muted)">1.0</text>
+    </svg>
+    <p class="pv-tone" style="text-align:center;">Observed FI ${r.observedFI.toFixed(3)} &rarr; Longevity Score ${r.score}/100</p>
+  </div>`;
+}
+
+// Visual companion to the Health Multiplier - two aligned bars (observed vs.
+// expected FI) instead of a single dense sentence, so "which one is bigger"
+// is legible at a glance instead of requiring mental subtraction.
+function fiComparisonHTML(r){
+  const obsPct = Math.min(100, r.observedFI*100);
+  const expPct = Math.min(100, r.eFI*100);
+  return `<div class="pv-card">
+    <div class="pv-insight-title">Observed vs. expected FI &rarr; Health Multiplier</div>
+    <div class="pv-field" style="margin-bottom:10px;">
+      <div class="pv-bar-copy" style="margin:0 0 4px;">Observed FI (this pet's actual answers) - ${r.observedFI.toFixed(3)}</div>
+      <div class="pv-bar"><div class="pv-bar-fill" style="width:${obsPct}%;background:var(--pv-blue);"></div></div>
+    </div>
+    <div class="pv-field" style="margin-bottom:0;">
+      <div class="pv-bar-copy" style="margin:0 0 4px;">Expected FI (typical for this age/breed) - ${r.eFI.toFixed(3)}</div>
+      <div class="pv-bar"><div class="pv-bar-fill" style="width:${expPct}%;background:var(--pv-ink);opacity:.35;"></div></div>
+    </div>
+    <p class="pv-hint" style="margin-top:10px;">Health Multiplier = observed &divide; expected = <strong>${r.multiplier.toFixed(2)}x</strong>. Below 1x is better than typical for this age/breed, above 1x is more deficits than typical - this (not the score above) is what age and breed actually influence.</p>
+  </div>`;
 }
 
 // Explains the actual numbers behind "how age and breed affect the score"
@@ -2134,17 +2301,6 @@ function renderDevBreakdown(){
       <td>${d.score}</td>
     </tr>`).join("");
 
-  const categoryRows = Object.values(PART_META).map(meta => {
-    const fi = categoryFI(meta.num);
-    const sc = categoryScore(meta.num);
-    return `
-    <tr>
-      <td>${meta.title}</td>
-      <td>${fi != null ? fi.toFixed(3) : "-"}</td>
-      <td>${sc != null ? sc : "-"}</td>
-    </tr>`;
-  }).join("");
-
   const body = `
     <p class="pv-eyebrow">Developer view</p>
     <h2 class="pv-headline">${name}'s full decision breakdown</h2>
@@ -2162,9 +2318,9 @@ function renderDevBreakdown(){
       <p class="pv-hint" style="margin:6px 0 0;">Matched breed tags (drive both scoring's breedModifier() and this pet's content selection): <strong>${tags.length ? tags.join(", ") : "none"}</strong></p>
     </div>
 
-    ${ageBreedExplanationHTML(r)}
+    ${categoryBreakdownHTML(r)}
 
-    ${ageTrendChartHTML(4, r)}
+    ${longevityScoreCurveHTML(r)}
 
     <div class="pv-card">
       <div class="pv-insight-title">Decision trail</div>
@@ -2176,23 +2332,11 @@ function renderDevBreakdown(){
       </div>
     </div>
 
-    <div class="pv-card">
-      <div class="pv-insight-title">Category rollups</div>
-      <div style="overflow-x:auto;">
-        <table class="pv-dev-table">
-          <thead><tr><th>Category</th><th>Category FI (0-1)</th><th>Category score (0-100)</th></tr></thead>
-          <tbody>${categoryRows}</tbody>
-        </table>
-      </div>
-      <p class="pv-hint" style="margin-top:10px;">Categories are weighted equally: each answered category contributes one equal vote to the pooled observed FI below, regardless of how many questions it has - a category with 12 answered items and one with 5 count the same. There is no per-question numeric weight in this model.</p>
-    </div>
+    ${ageBreedExplanationHTML(r)}
 
-    ${categoryChartHTML()}
+    ${fiComparisonHTML(r)}
 
-    <div class="pv-card">
-      <div class="pv-insight-title">Aggregation</div>
-      <p class="pv-hint" style="margin:0;">Observed FI: <strong>${r.observedFI.toFixed(3)}</strong> - Expected FI for this pet's age/breed/size: <strong>${r.eFI.toFixed(3)}</strong> - Health Multiplier (observed &divide; expected): <strong>${r.multiplier.toFixed(2)}x</strong></p>
-    </div>
+    ${ageTrendChartHTML(4, r)}
 
     <div class="pv-card">
       <div class="pv-insight-title">Final computed result</div>
@@ -2332,7 +2476,7 @@ function foodRecommendationHtml(r){
   return `<div class="pv-card">
     <div class="pv-insight-title">What to look for in their food</div>
     <p class="pv-hint" style="margin:0 0 10px;">Based on everything so far for ${name} - ${factors}, activity, body condition, and today's flagged answers:</p>
-    <ul>${lines.map(l=>`<li>${l}</li>`).join("")}</ul>
+    <ul class="pv-row-list">${lines.map(l=>`<li><span class="pv-row-dot pv-dot-help"></span>${l}</li>`).join("")}</ul>
     <p class="pv-hint" style="margin-top:10px;margin-bottom:0;">General guidance on what to look for, not a specific product - always confirm with your vet before switching foods, especially for a diagnosed condition.</p>
   </div>`;
 }
@@ -2394,6 +2538,9 @@ function renderComplete(){
   const chart = BCS_CHART[b.species];
   const bcsEntry = chart.find(c=>c.bcs===b.bcs) || chart[4];
   const balance = currentFoodActivityBalance();
+  // Same 3-tier thresholds as before, now sharing the ring's zone-color
+  // vocabulary (2026-07-20 GUI restyle) instead of plain unthemed text.
+  const multiplierColor = r.multiplier <= 1.15 ? "var(--pv-good)" : r.multiplier <= 1.4 ? "var(--pv-mid)" : "var(--pv-concern)";
   const multiplierTone = r.multiplier <= 1.15
     ? "Right around typical for their age - a good, neutral baseline."
     : r.multiplier <= 1.4
@@ -2402,15 +2549,19 @@ function renderComplete(){
 
   const body = `
     <div class="pv-badge">Profile complete</div>
-    <h2 class="pv-headline">${name}'s profile is set up</h2>
-    <p class="pv-hint" style="max-width:520px;">This is the start, not the finish - Pawl keeps refining ${name}'s picture as you add more over time. Extra assessments can be layered in later without redoing any of this.</p>
-    <button type="button" class="pv-pill-btn pv-ghost pv-small" id="open-dev-breakdown">View full decision breakdown (developer)</button>
+    <h2 class="pv-headline" style="text-align:center;">${name}'s profile is set up</h2>
+    <p class="pv-hint" style="max-width:520px;margin-left:auto;margin-right:auto;text-align:center;">This is the start, not the finish - Pawl keeps refining ${name}'s picture as you add more over time. Extra assessments can be layered in later without redoing any of this.</p>
+    <div style="text-align:center;margin-bottom:16px;"><button type="button" class="pv-pill-btn pv-ghost pv-small" id="open-dev-breakdown">View full decision breakdown (developer)</button></div>
 
-    <div class="pv-card pv-card-center">
-      <div class="pv-stat-label">Health Multiplier</div>
-      <div class="pv-stat-value" style="font-size:44px;">${r.multiplier.toFixed(2)}x</div>
-      <p class="pv-hint" style="max-width:440px;margin:6px auto 10px;">This compares ${name}'s current signals to what's typical for their age - 1.0x is the neutral baseline. It's a wellness and longevity-potential signal, not a lifespan guarantee.</p>
-      <div class="pv-tone">${multiplierTone}</div>
+    <!-- Hero-style Health Multiplier (2026-07-20 GUI restyle) - same 3-tier
+         thresholds/tone copy as before, now zone-colored like the Results
+         pages' score ring instead of plain unthemed text, for one consistent
+         "hero stat" language app-wide. -->
+    <div class="pv-hero">
+      <div class="pv-hero-num-label">Health Multiplier</div>
+      <div class="pv-hero-num-val" style="color:${multiplierColor};">${r.multiplier.toFixed(2)}x</div>
+      <div class="pv-hero-zone" style="color:${multiplierColor};">${multiplierTone}</div>
+      <p class="pv-hint" style="max-width:440px;margin:6px auto 0;">This compares ${name}'s current signals to what's typical for their age - 1.0x is the neutral baseline. It's a wellness and longevity-potential signal, not a lifespan guarantee.</p>
     </div>
 
     <div class="pv-card">

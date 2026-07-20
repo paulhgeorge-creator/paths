@@ -445,7 +445,7 @@ return {
   getActivityMinutesThreshold, ACTIVITY_BREED_OVERRIDES, activityGuidance,
   ACTIVITY_UPPER_RATIO_CAUTION, ACTIVITY_UPPER_RATIO_MAX,
   overweightPercentile, fuseAge, deltaPercentOfAge, BCS_CHART,
-  bandYears, fiZone, longevityScore, healthMultiplier, foodActivityBalance,
+  bandYears, fiZone, longevityScore, LONGEVITY_SCORE_ANCHORS, healthMultiplier, foodActivityBalance,
   foodEquationMultiplier, foodBalancePercentile,
   catHumanEquivalent, dogHumanEquivalent, bcsToDeficit, AGE_GUESS,
   FRAILTY_MODEL_CONFIG, ACTIVITY_MINUTES_TABLE,
