@@ -7,7 +7,7 @@
     </filter>
     <style>
       .ink { fill: #000; }
-      .blue { fill: #2461d3; }
+      .blue { fill: #195ddc; }
     </style>
   </defs>
   <g filter="url(#fuzpen)">
